@@ -1,150 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Manager</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-            background-color: #f4f4f9;
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        .form-container {
-            margin: 20px auto;
-            max-width: 400px;
-            padding: 20px;
-            background: #ffffff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-
-        .form-container input {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .form-container button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .form-container button:hover {
-            background-color: #0056b3;
-        }
-
-        #message {
-            margin-top: 20px;
-            color: green;
-            font-size: 14px;
-        }
-
-        #error {
-            color: red;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Manager</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #form-container { max-width: 300px; margin: auto; }
+    input { display: block; margin-bottom: 10px; width: 100%; padding: 10px; }
+    button { padding: 10px; width: 100%; background-color: #007BFF; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    .message { margin-top: 10px; color: green; }
+    .error { margin-top: 10px; color: red; }
+  </style>
 </head>
 <body>
+  <div id="form-container">
     <h1>Password Manager</h1>
-    <div class="form-container">
-        <input type="text" id="username" placeholder="Enter username">
-        <input type="password" id="password" placeholder="Enter password">
-        <button id="loginButton">Login</button>
-        <button id="registerButton">Create Account</button>
-        <p id="message"></p>
-    </div>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="register-btn">Create Account</button>
+    <button id="login-btn">Login</button>
+    <div id="message" class="message"></div>
+    <div id="error" class="error"></div>
+  </div>
 
-    <script>
-        const BACKEND_URL = "http://127.0.0.1:5000"; // Update with your backend's URL if deployed.
+  <script>
+    const BACKEND_URL = 'http://127.0.0.1:5000'; // Adjust if backend is hosted elsewhere
 
-        const usernameInput = document.getElementById("username");
-        const passwordInput = document.getElementById("password");
-        const loginButton = document.getElementById("loginButton");
-        const registerButton = document.getElementById("registerButton");
-        const messageElement = document.getElementById("message");
+    async function handleRegister() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
-        // Helper function to display messages
-        const showMessage = (message, isError = false) => {
-            messageElement.textContent = message;
-            messageElement.style.color = isError ? "red" : "green";
-        };
+      if (!username || !password) {
+        document.getElementById('error').textContent = 'Please fill out all fields.';
+        return;
+      }
 
-        // Event listener for the "Create Account" button
-        registerButton.addEventListener("click", async () => {
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value.trim();
-
-            if (!username || !password) {
-                showMessage("Please enter both username and password.", true);
-                return;
-            }
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/register`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username, password }),
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    showMessage(result.message || "Account created successfully!");
-                } else {
-                    showMessage(result.error || "Failed to create account.", true);
-                }
-            } catch (error) {
-                showMessage("Error connecting to the server.", true);
-                console.error("Register Error:", error);
-            }
+      try {
+        const response = await fetch(`${BACKEND_URL}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
         });
 
-        // Event listener for the "Login" button
-        loginButton.addEventListener("click", async () => {
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value.trim();
+        const result = await response.json();
 
-            if (!username || !password) {
-                showMessage("Please enter both username and password.", true);
-                return;
-            }
+        if (response.ok) {
+          document.getElementById('message').textContent = result.message;
+          document.getElementById('error').textContent = '';
+        } else {
+          document.getElementById('error').textContent = result.error;
+          document.getElementById('message').textContent = '';
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('error').textContent = 'Error connecting to the server.';
+      }
+    }
 
-            try {
-                const response = await fetch(`${BACKEND_URL}/login`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username, password }),
-                });
+    async function handleLogin() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
-                const result = await response.json();
+      if (!username || !password) {
+        document.getElementById('error').textContent = 'Please fill out all fields.';
+        return;
+      }
 
-                if (response.ok) {
-                    showMessage(result.message || "Login successful!");
-                } else {
-                    showMessage(result.error || "Invalid credentials.", true);
-                }
-            } catch (error) {
-                showMessage("Error connecting to the server.", true);
-                console.error("Login Error:", error);
-            }
+      try {
+        const response = await fetch(`${BACKEND_URL}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
         });
-    </script>
+
+        const result = await response.json();
+
+        if (response.ok) {
+          document.getElementById('message').textContent = result.message;
+          document.getElementById('error').textContent = '';
+        } else {
+          document.getElementById('error').textContent = result.error;
+          document.getElementById('message').textContent = '';
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('error').textContent = 'Error connecting to the server.';
+      }
+    }
+
+    document.getElementById('register-btn').addEventListener('click', handleRegister);
+    document.getElementById('login-btn').addEventListener('click', handleLogin);
+  </script>
 </body>
 </html>
