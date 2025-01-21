@@ -4,142 +4,50 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Password Manager</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: auto;
-      padding: 20px;
-    }
-    h1, h2 {
-      text-align: center;
-    }
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-    }
-    button {
-      cursor: pointer;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      background: #f4f4f4;
-      margin: 5px 0;
-      padding: 10px;
-      border-radius: 5px;
-    }
-  </style>
 </head>
 <body>
   <h1>Password Manager</h1>
-
   <div id="auth">
-    <h2>Login or Signup</h2>
-    <form id="authForm">
-      <input type="text" id="username" placeholder="Username" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <div style="display: flex; gap: 10px;">
-        <button type="button" id="loginButton">Login</button>
-        <button type="button" id="signupButton">Signup</button>
-      </div>
-    </form>
-  </div>
-
-  <div id="app" style="display: none;">
-    <h2>Add a Password</h2>
-    <form id="passwordForm">
-      <input type="text" id="site" placeholder="Website" required>
-      <input type="password" id="passwordField" placeholder="Password" required>
-      <button type="submit">Add Password</button>
-    </form>
-    <h2>Stored Passwords</h2>
-    <ul id="passwordList"></ul>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="signupButton">Signup</button>
+    <button id="loginButton">Login</button>
   </div>
 
   <script>
-    const API_URL = 'http://127.0.0.1:5000/api';
+    const API_URL = 'http://your-tor-hidden-service.onion/api';
 
     async function handleAuth(action) {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
       if (!username || !password) {
-        alert('Please enter both username and password.');
+        alert('Please fill in both fields.');
         return;
       }
 
       const endpoint = action === 'login' ? '/login' : '/signup';
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-
-      if (response.ok) {
-        if (action === 'login') {
-          document.getElementById('auth').style.display = 'none';
-          document.getElementById('app').style.display = 'block';
-          fetchPasswords(); // Fetch saved passwords
-        } else {
-          alert('Signup successful! You can now log in.');
-        }
-      } else {
-        const error = await response.json();
-        alert(error.error || 'An error occurred.');
-      }
-    }
-
-    async function fetchPasswords() {
-      const response = await fetch(`${API_URL}/passwords`);
-      if (response.ok) {
-        const passwords = await response.json();
-        const list = document.getElementById('passwordList');
-        list.innerHTML = ''; // Clear the list
-        passwords.forEach(p => {
-          const li = document.createElement('li');
-          li.textContent = `${p.site}: ${p.password}`;
-          list.appendChild(li);
+      try {
+        const response = await fetch(`${API_URL}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
         });
-      } else {
-        alert('Failed to fetch passwords.');
+
+        const result = await response.json();
+        if (response.ok) {
+          alert(result.message);
+        } else {
+          alert(result.error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to connect to the backend. Make sure you are using Tor.');
       }
     }
 
-    document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
     document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
-
-    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const site = document.getElementById('site').value;
-      const password = document.getElementById('passwordField').value;
-
-      const response = await fetch(`${API_URL}/passwords`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ site, password })
-      });
-
-      if (response.ok) {
-        fetchPasswords();
-        document.getElementById('site').value = '';
-        document.getElementById('passwordField').value = '';
-      } else {
-        alert('Failed to add password.');
-      }
-    });
+    document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
   </script>
 </body>
 </html>
