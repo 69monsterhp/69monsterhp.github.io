@@ -7,163 +7,113 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .container {
-            width: 80%;
-            margin: 0 auto;
+            margin: 20px;
             padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
+            max-width: 500px;
+            margin: auto;
         }
-        h1 {
-            text-align: center;
-        }
-        form {
-            margin-bottom: 20px;
-        }
-        label {
+        input, button {
             display: block;
-            margin-bottom: 8px;
-        }
-        input {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            display: inline-block;
-            background-color: #007BFF;
-            color: #fff;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .hidden {
-            display: none;
+            margin: 10px 0;
+            padding: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Password Manager</h1>
-        
-        <!-- Register Section -->
-        <div id="registerSection">
-            <h2>Register</h2>
-            <form id="registerForm">
-                <label>Username:</label>
-                <input type="text" id="regUsername" required>
-                <label>Password:</label>
-                <input type="password" id="regPassword" required>
-                <button type="button" onclick="register()">Register</button>
-            </form>
-        </div>
+    <h1>Password Manager</h1>
+    <div id="register-section">
+        <h2>Register</h2>
+        <input type="text" id="regUsername" placeholder="Username">
+        <input type="password" id="regPassword" placeholder="Password">
+        <button onclick="register()">Register</button>
+    </div>
 
-        <!-- Login Section -->
-        <div id="loginSection">
-            <h2>Login</h2>
-            <form id="loginForm">
-                <label>Username:</label>
-                <input type="text" id="loginUsername" required>
-                <label>Password:</label>
-                <input type="password" id="loginPassword" required>
-                <button type="button" onclick="login()">Login</button>
-            </form>
-        </div>
+    <div id="login-section">
+        <h2>Login</h2>
+        <input type="text" id="loginUsername" placeholder="Username">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
 
-        <!-- Password Management Section -->
-        <div id="passwordSection" class="hidden">
-            <h2>Manage Passwords</h2>
-            <form id="savePasswordForm">
-                <label>Service:</label>
-                <input type="text" id="service" required>
-                <label>Password:</label>
-                <input type="password" id="password" required>
-                <button type="button" onclick="savePassword()">Save Password</button>
-            </form>
+    <div id="password-section" style="display: none;">
+        <h2>Save Password</h2>
+        <input type="text" id="service" placeholder="Service">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="savePassword()">Save Password</button>
 
-            <form id="getPasswordForm">
-                <label>Service:</label>
-                <input type="text" id="getService" required>
-                <button type="button" onclick="getPassword()">Retrieve Password</button>
-            </form>
-
-            <div id="result"></div>
-        </div>
+        <h2>Get Password</h2>
+        <input type="text" id="getService" placeholder="Service">
+        <button onclick="getPassword()">Get Password</button>
+        <p id="result"></p>
     </div>
 
     <script>
-        let loggedInUser = null;
-
-        function showSection(sectionId) {
-            document.getElementById("registerSection").classList.add("hidden");
-            document.getElementById("loginSection").classList.add("hidden");
-            document.getElementById("passwordSection").classList.add("hidden");
-            document.getElementById(sectionId).classList.remove("hidden");
-        }
+        const BACKEND_URL = 'http://127.0.0.1:5000'; // Update with your backend URL
 
         async function register() {
-            const username = document.getElementById("regUsername").value;
-            const password = document.getElementById("regPassword").value;
-            const response = await fetch('/register', {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+
+            const response = await fetch(`${BACKEND_URL}/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
+
             const result = await response.json();
             alert(result.message || result.error);
         }
 
         async function login() {
-            const username = document.getElementById("loginUsername").value;
-            const password = document.getElementById("loginPassword").value;
-            const response = await fetch('/login', {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const response = await fetch(`${BACKEND_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
+
             const result = await response.json();
-            if (result.message) {
-                loggedInUser = username;
-                showSection("passwordSection");
-                alert(result.message);
-            } else {
-                alert(result.error);
+            alert(result.message || result.error);
+
+            if (result.message === 'Login successful') {
+                document.getElementById('password-section').style.display = 'block';
             }
         }
 
         async function savePassword() {
-            const service = document.getElementById("service").value;
-            const password = document.getElementById("password").value;
-            const response = await fetch('/save', {
+            const username = document.getElementById('loginUsername').value;
+            const service = document.getElementById('service').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch(`${BACKEND_URL}/save`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: loggedInUser, service, password })
+                body: JSON.stringify({ username, service, password })
             });
+
             const result = await response.json();
             alert(result.message || result.error);
         }
 
         async function getPassword() {
-            const service = document.getElementById("getService").value;
-            const response = await fetch('/get', {
+            const username = document.getElementById('loginUsername').value;
+            const service = document.getElementById('getService').value;
+
+            const response = await fetch(`${BACKEND_URL}/get`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: loggedInUser, service })
+                body: JSON.stringify({ username, service })
             });
+
             const result = await response.json();
-            document.getElementById("result").innerText = result.password ? `Password: ${result.password}` : result.error;
+            if (result.password) {
+                document.getElementById('result').textContent = `Password: ${result.password}`;
+            } else {
+                alert(result.error);
+            }
         }
     </script>
 </body>
