@@ -1,58 +1,42 @@
-/* General reset for consistent styling */
-body, h1, ul, li, button {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-/* Center everything in the body */
 body {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f4f4f9;
-    color: #333;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
 }
 
-/* Style the header */
 h1 {
-    margin-bottom: 20px;
-    font-size: 2rem;
-    text-align: center;
-    color: #4a90e2;
+  background-color: #333;
+  color: white;
+  margin: 0;
+  padding: 1rem;
 }
 
-/* Style the button */
+input {
+  margin: 0.5rem;
+  padding: 0.5rem;
+  width: 200px;
+}
+
 button {
-    background-color: #4a90e2;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s ease;
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 button:hover {
-    background-color: #357abf;
+  background-color: #0056b3;
 }
 
-/* Style the list container */
+#password-manager-section {
+  margin-top: 2rem;
+}
+
 ul {
-    list-style-type: disc;
-    margin-top: 20px;
-    padding-left: 40px; /* Adds space for bullets */
-    text-align: left; /* Aligns list items to the left */
-    max-width: 400px;
-}
-
-/* Style each list item */
-li {
-    margin-bottom: 10px;
-    font-size: 1rem;
-    color: #333;
+  list-style-type: none;
+  padding: 0;
 }
