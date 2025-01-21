@@ -7,156 +7,142 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            max-width: 500px;
-            margin: auto;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            background-color: #f4f4f9;
         }
-        input, button {
+
+        h1 {
+            color: #333;
+        }
+
+        .form-container {
+            margin: 20px auto;
+            max-width: 400px;
+            padding: 20px;
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .form-container input {
             display: block;
             width: 100%;
-            margin: 10px 0;
             padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
-        .hidden {
-            display: none;
+
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
+        #message {
+            margin-top: 20px;
+            color: green;
+            font-size: 14px;
+        }
+
+        #error {
+            color: red;
         }
     </style>
 </head>
 <body>
     <h1>Password Manager</h1>
-
-    <div id="register-section">
-        <h2>Register</h2>
-        <input type="text" id="regUsername" placeholder="Username">
-        <input type="password" id="regPassword" placeholder="Password">
-        <button id="registerButton">Register</button>
-    </div>
-
-    <div id="login-section">
-        <h2>Login</h2>
-        <input type="text" id="loginUsername" placeholder="Username">
-        <input type="password" id="loginPassword" placeholder="Password">
+    <div class="form-container">
+        <input type="text" id="username" placeholder="Enter username">
+        <input type="password" id="password" placeholder="Enter password">
         <button id="loginButton">Login</button>
-    </div>
-
-    <div id="password-section" class="hidden">
-        <h2>Save Password</h2>
-        <input type="text" id="service" placeholder="Service">
-        <input type="password" id="password" placeholder="Password">
-        <button id="saveButton">Save Password</button>
-
-        <h2>Get Password</h2>
-        <input type="text" id="getService" placeholder="Service">
-        <button id="getButton">Get Password</button>
-        <p id="result"></p>
+        <button id="registerButton">Create Account</button>
+        <p id="message"></p>
     </div>
 
     <script>
-        const BACKEND_URL = 'http://127.0.0.1:5000'; // Update this URL to match your backend
+        const BACKEND_URL = "http://127.0.0.1:5000"; // Update with your backend's URL if deployed.
 
-        document.getElementById('registerButton').addEventListener('click', async () => {
-            const username = document.getElementById('regUsername').value;
-            const password = document.getElementById('regPassword').value;
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+        const loginButton = document.getElementById("loginButton");
+        const registerButton = document.getElementById("registerButton");
+        const messageElement = document.getElementById("message");
+
+        // Helper function to display messages
+        const showMessage = (message, isError = false) => {
+            messageElement.textContent = message;
+            messageElement.style.color = isError ? "red" : "green";
+        };
+
+        // Event listener for the "Create Account" button
+        registerButton.addEventListener("click", async () => {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
 
             if (!username || !password) {
-                alert('Please fill in all fields.');
+                showMessage("Please enter both username and password.", true);
                 return;
             }
 
             try {
                 const response = await fetch(`${BACKEND_URL}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
                 });
+
                 const result = await response.json();
-                console.log('Register result:', result);
-                alert(result.message || result.error);
+
+                if (response.ok) {
+                    showMessage(result.message || "Account created successfully!");
+                } else {
+                    showMessage(result.error || "Failed to create account.", true);
+                }
             } catch (error) {
-                console.error('Error during registration:', error);
-                alert('Failed to register. Check the console for more details.');
+                showMessage("Error connecting to the server.", true);
+                console.error("Register Error:", error);
             }
         });
 
-        document.getElementById('loginButton').addEventListener('click', async () => {
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
+        // Event listener for the "Login" button
+        loginButton.addEventListener("click", async () => {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
 
             if (!username || !password) {
-                alert('Please fill in all fields.');
+                showMessage("Please enter both username and password.", true);
                 return;
             }
 
             try {
                 const response = await fetch(`${BACKEND_URL}/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
                 });
+
                 const result = await response.json();
-                console.log('Login result:', result);
-                alert(result.message || result.error);
 
-                if (result.message === 'Login successful') {
-                    document.getElementById('password-section').classList.remove('hidden');
-                }
-            } catch (error) {
-                console.error('Error during login:', error);
-                alert('Failed to log in. Check the console for more details.');
-            }
-        });
-
-        document.getElementById('saveButton').addEventListener('click', async () => {
-            const username = document.getElementById('loginUsername').value;
-            const service = document.getElementById('service').value;
-            const password = document.getElementById('password').value;
-
-            if (!service || !password) {
-                alert('Please fill in all fields.');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/save`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, service, password })
-                });
-                const result = await response.json();
-                console.log('Save Password result:', result);
-                alert(result.message || result.error);
-            } catch (error) {
-                console.error('Error during saving password:', error);
-                alert('Failed to save password. Check the console for more details.');
-            }
-        });
-
-        document.getElementById('getButton').addEventListener('click', async () => {
-            const username = document.getElementById('loginUsername').value;
-            const service = document.getElementById('getService').value;
-
-            if (!service) {
-                alert('Please enter a service name.');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/get`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, service })
-                });
-                const result = await response.json();
-                console.log('Get Password result:', result);
-
-                if (result.password) {
-                    document.getElementById('result').textContent = `Password: ${result.password}`;
+                if (response.ok) {
+                    showMessage(result.message || "Login successful!");
                 } else {
-                    alert(result.error);
+                    showMessage(result.error || "Invalid credentials.", true);
                 }
             } catch (error) {
-                console.error('Error during retrieving password:', error);
-                alert('Failed to retrieve password. Check the console for more details.');
+                showMessage("Error connecting to the server.", true);
+                console.error("Login Error:", error);
             }
         });
     </script>
