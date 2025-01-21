@@ -47,18 +47,14 @@
   <h1>Password Manager</h1>
 
   <div id="auth">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <input type="text" id="loginUsername" placeholder="Username" required>
-      <input type="password" id="loginPassword" placeholder="Password" required>
-      <button type="submit">Login</button>
-    </form>
-
-    <h2>Signup</h2>
-    <form id="signupForm">
-      <input type="text" id="signupUsername" placeholder="Username" required>
-      <input type="password" id="signupPassword" placeholder="Password" required>
-      <button type="submit">Signup</button>
+    <h2>Login or Signup</h2>
+    <form id="authForm">
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" id="loginButton">Login</button>
+        <button type="button" id="signupButton">Signup</button>
+      </div>
     </form>
   </div>
 
@@ -76,59 +72,54 @@
   <script>
     const API_URL = 'http://127.0.0.1:5000/api';
 
-    async function login(username, password) {
-      const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      if (response.ok) {
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        fetchPasswords();
-      } else {
-        alert('Login failed!');
-      }
-    }
+    async function handleAuth(action) {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
-    async function signup(username, password) {
-      const response = await fetch(`${API_URL}/signup`, {
+      if (!username || !password) {
+        alert('Please enter both username and password.');
+        return;
+      }
+
+      const endpoint = action === 'login' ? '/login' : '/signup';
+      const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
+
       if (response.ok) {
-        alert('Signup successful! You can now log in.');
+        if (action === 'login') {
+          document.getElementById('auth').style.display = 'none';
+          document.getElementById('app').style.display = 'block';
+          fetchPasswords();
+        } else {
+          alert('Signup successful! You can now log in.');
+        }
       } else {
-        alert('Signup failed. Username might already exist.');
+        const error = await response.json();
+        alert(error.error || 'An error occurred.');
       }
     }
 
     async function fetchPasswords() {
       const response = await fetch(`${API_URL}/passwords`);
-      const passwords = await response.json();
-      const list = document.getElementById('passwordList');
-      list.innerHTML = ''; // Clear the list
-      passwords.forEach(p => {
-        const li = document.createElement('li');
-        li.textContent = `${p.site}: ${p.password}`;
-        list.appendChild(li);
-      });
+      if (response.ok) {
+        const passwords = await response.json();
+        const list = document.getElementById('passwordList');
+        list.innerHTML = ''; // Clear the list
+        passwords.forEach(p => {
+          const li = document.createElement('li');
+          li.textContent = `${p.site}: ${p.password}`;
+          list.appendChild(li);
+        });
+      } else {
+        alert('Failed to fetch passwords.');
+      }
     }
 
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const username = document.getElementById('loginUsername').value;
-      const password = document.getElementById('loginPassword').value;
-      login(username, password);
-    });
-
-    document.getElementById('signupForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const username = document.getElementById('signupUsername').value;
-      const password = document.getElementById('signupPassword').value;
-      signup(username, password);
-    });
+    document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
+    document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
 
     document.getElementById('passwordForm').addEventListener('submit', async (e) => {
       e.preventDefault();
