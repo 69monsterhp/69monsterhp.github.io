@@ -1,28 +1,29 @@
-document.getElementById('register-btn').addEventListener('click', async () => {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+async function handleAuth(action) {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
 
-    if (!username || !password) {
-        alert('Please fill in both username and password.');
-        return;
+  if (!username || !password) {
+    alert('Please enter both username and password.');
+    return;
+  }
+
+  const endpoint = action === 'login' ? '/login' : '/signup';
+  const response = await fetch(`http://127.0.0.1:5000/api${endpoint}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
+
+  if (response.ok) {
+    if (action === 'login') {
+      document.getElementById('auth').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      fetchPasswords(); // Fetch saved passwords
+    } else {
+      alert('Signup successful! You can now log in.');
     }
-
-    try {
-        const response = await fetch(`${BACKEND_URL}/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password }),
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            alert(result.message); // Should say "User registered successfully"
-        } else {
-            const error = await response.json();
-            alert(`Error: ${error.error || 'Something went wrong'}`);
-        }
-    } catch (err) {
-        console.error(err);
-        alert('Error connecting to the server.');
-    }
-});
+  } else {
+    const error = await response.json();
+    alert(error.error || 'An error occurred.');
+  }
+}
