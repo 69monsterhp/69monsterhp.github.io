@@ -1,4 +1,4 @@
-const backendUrl = 'http://your-backend-address.onion';
+const backendUrl = 'r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion';
 
 document.getElementById('login-button').addEventListener('click', async () => {
   const username = document.getElementById('username').value;
