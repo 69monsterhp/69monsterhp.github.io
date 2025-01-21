@@ -70,7 +70,7 @@
 
     // Add a new password
     document.getElementById('passwordForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
+      e.preventDefault(); // Prevent form from reloading the page
       const site = document.getElementById('site').value;
       const password = document.getElementById('password').value;
 
@@ -83,9 +83,9 @@
       if (response.ok) {
         document.getElementById('site').value = '';
         document.getElementById('password').value = '';
-        fetchPasswords();
+        fetchPasswords(); // Refresh the list
       } else {
-        alert('Error adding password!');
+        console.error('Error adding password:', await response.text());
       }
     });
 
