@@ -1,0 +1,23 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 2em;
+}
+
+button {
+    padding: 0.5em 1em;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+#output {
+    margin-top: 1em;
+    white-space: pre-wrap;
+    text-align: left;
+    display: inline-block;
+    max-width: 80%;
+    background: #f4f4f4;
+    padding: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
