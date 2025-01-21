@@ -1,28 +1,28 @@
-const form = document.getElementById('password-form');
-const messageDiv = document.getElementById('message');
-
-form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const service = document.getElementById('service').value;
+document.getElementById('register-btn').addEventListener('click', async () => {
+    const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    // Encrypt password locally
-    const encryptedPassword = btoa(password); // Use stronger encryption in production
+    if (!username || !password) {
+        alert('Please fill in both username and password.');
+        return;
+    }
 
     try {
-        const response = await fetch('http://r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion/save', {
+        const response = await fetch(`${BACKEND_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ service, password: encryptedPassword }),
+            body: JSON.stringify({ username, password }),
         });
 
         if (response.ok) {
-            messageDiv.textContent = 'Password saved!';
+            const result = await response.json();
+            alert(result.message); // Should say "User registered successfully"
         } else {
-            messageDiv.textContent = 'Error saving password.';
+            const error = await response.json();
+            alert(`Error: ${error.error || 'Something went wrong'}`);
         }
     } catch (err) {
-        messageDiv.textContent = 'Error connecting to backend.';
+        console.error(err);
+        alert('Error connecting to the server.');
     }
 });
