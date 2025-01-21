@@ -49,70 +49,95 @@
     </div>
 
     <script>
-        const BACKEND_URL = 'http://127.0.0.1:5000'; // Update with your backend URL
+        // Replace with your backend URL
+        const BACKEND_URL = 'http://127.0.0.1:5000';
 
         async function register() {
+            console.log('Register button clicked'); // Debugging
             const username = document.getElementById('regUsername').value;
             const password = document.getElementById('regPassword').value;
 
-            const response = await fetch(`${BACKEND_URL}/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
+            try {
+                const response = await fetch(`${BACKEND_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
 
-            const result = await response.json();
-            alert(result.message || result.error);
+                const result = await response.json();
+                alert(result.message || result.error);
+                console.log('Register response:', result); // Debugging
+            } catch (error) {
+                console.error('Error in register:', error);
+            }
         }
 
         async function login() {
+            console.log('Login button clicked'); // Debugging
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
 
-            const response = await fetch(`${BACKEND_URL}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
+            try {
+                const response = await fetch(`${BACKEND_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
 
-            const result = await response.json();
-            alert(result.message || result.error);
+                const result = await response.json();
+                alert(result.message || result.error);
+                console.log('Login response:', result); // Debugging
 
-            if (result.message === 'Login successful') {
-                document.getElementById('password-section').style.display = 'block';
+                if (result.message === 'Login successful') {
+                    document.getElementById('password-section').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error in login:', error);
             }
         }
 
         async function savePassword() {
+            console.log('Save Password button clicked'); // Debugging
             const username = document.getElementById('loginUsername').value;
             const service = document.getElementById('service').value;
             const password = document.getElementById('password').value;
 
-            const response = await fetch(`${BACKEND_URL}/save`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, service, password })
-            });
+            try {
+                const response = await fetch(`${BACKEND_URL}/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, service, password })
+                });
 
-            const result = await response.json();
-            alert(result.message || result.error);
+                const result = await response.json();
+                alert(result.message || result.error);
+                console.log('Save Password response:', result); // Debugging
+            } catch (error) {
+                console.error('Error in savePassword:', error);
+            }
         }
 
         async function getPassword() {
+            console.log('Get Password button clicked'); // Debugging
             const username = document.getElementById('loginUsername').value;
             const service = document.getElementById('getService').value;
 
-            const response = await fetch(`${BACKEND_URL}/get`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, service })
-            });
+            try {
+                const response = await fetch(`${BACKEND_URL}/get`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, service })
+                });
 
-            const result = await response.json();
-            if (result.password) {
-                document.getElementById('result').textContent = `Password: ${result.password}`;
-            } else {
-                alert(result.error);
+                const result = await response.json();
+                console.log('Get Password response:', result); // Debugging
+                if (result.password) {
+                    document.getElementById('result').textContent = `Password: ${result.password}`;
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error('Error in getPassword:', error);
             }
         }
     </script>
