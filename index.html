@@ -5,93 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Password Manager</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #form-container { max-width: 300px; margin: auto; }
-    input { display: block; margin-bottom: 10px; width: 100%; padding: 10px; }
-    button { padding: 10px; width: 100%; background-color: #007BFF; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: #0056b3; }
-    .message { margin-top: 10px; color: green; }
-    .error { margin-top: 10px; color: red; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      cursor: pointer;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #f4f4f4;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
-  <div id="form-container">
-    <h1>Password Manager</h1>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button id="register-btn">Create Account</button>
-    <button id="login-btn">Login</button>
-    <div id="message" class="message"></div>
-    <div id="error" class="error"></div>
-  </div>
-
+  <h1>Password Manager</h1>
+  <form id="passwordForm">
+    <input type="text" id="site" placeholder="Website" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button type="submit">Add Password</button>
+  </form>
+  <h2>Stored Passwords</h2>
+  <ul id="passwordList"></ul>
   <script>
-    const BACKEND_URL = 'http://127.0.0.1:5000'; // Adjust if backend is hosted elsewhere
+    const API_URL = 'http://127.0.0.1:5000/api/passwords';
 
-    async function handleRegister() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      if (!username || !password) {
-        document.getElementById('error').textContent = 'Please fill out all fields.';
-        return;
-      }
-
-      try {
-        const response = await fetch(`${BACKEND_URL}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          document.getElementById('message').textContent = result.message;
-          document.getElementById('error').textContent = '';
-        } else {
-          document.getElementById('error').textContent = result.error;
-          document.getElementById('message').textContent = '';
-        }
-      } catch (err) {
-        console.error(err);
-        document.getElementById('error').textContent = 'Error connecting to the server.';
-      }
+    // Fetch passwords from the backend
+    async function fetchPasswords() {
+      const response = await fetch(API_URL);
+      const passwords = await response.json();
+      const list = document.getElementById('passwordList');
+      list.innerHTML = ''; // Clear the list
+      passwords.forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = `${p.site}: ${p.password}`;
+        list.appendChild(li);
+      });
     }
 
-    async function handleLogin() {
-      const username = document.getElementById('username').value;
+    // Add a new password
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const site = document.getElementById('site').value;
       const password = document.getElementById('password').value;
 
-      if (!username || !password) {
-        document.getElementById('error').textContent = 'Please fill out all fields.';
-        return;
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site, password })
+      });
+
+      if (response.ok) {
+        document.getElementById('site').value = '';
+        document.getElementById('password').value = '';
+        fetchPasswords();
+      } else {
+        alert('Error adding password!');
       }
+    });
 
-      try {
-        const response = await fetch(`${BACKEND_URL}/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          document.getElementById('message').textContent = result.message;
-          document.getElementById('error').textContent = '';
-        } else {
-          document.getElementById('error').textContent = result.error;
-          document.getElementById('message').textContent = '';
-        }
-      } catch (err) {
-        console.error(err);
-        document.getElementById('error').textContent = 'Error connecting to the server.';
-      }
-    }
-
-    document.getElementById('register-btn').addEventListener('click', handleRegister);
-    document.getElementById('login-btn').addEventListener('click', handleLogin);
+    // Initial fetch of passwords
+    fetchPasswords();
   </script>
 </body>
 </html>
