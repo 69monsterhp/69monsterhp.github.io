@@ -24,8 +24,8 @@
             border-radius: 8px;
         }
         input, button {
-            width: 100%;
-            margin-bottom: 10px;
+            width: calc(100% - 20px);
+            margin: 5px 0;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -34,6 +34,7 @@
             background: #007BFF;
             color: white;
             border: none;
+            cursor: pointer;
         }
         button:hover {
             background: #0056b3;
@@ -41,7 +42,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="authContainer">
         <h2>Password Manager</h2>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
@@ -49,8 +50,21 @@
         <button id="loginButton">Log In</button>
     </div>
 
+    <div class="container" id="passwordContainer" style="display: none;">
+        <h2>Manage Passwords</h2>
+        <input type="text" id="site" placeholder="Site">
+        <input type="text" id="passwordValue" placeholder="Password">
+        <button id="addPasswordButton">Add Password</button>
+        <ul id="passwordList"></ul>
+    </div>
+
     <script>
         const API_URL = 'http://r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion/api';
+
+        function toggleContainers(authVisible) {
+            document.getElementById('authContainer').style.display = authVisible ? 'block' : 'none';
+            document.getElementById('passwordContainer').style.display = authVisible ? 'none' : 'block';
+        }
 
         async function handleAuth(action) {
             const username = document.getElementById('username').value;
@@ -67,23 +81,42 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password }),
-                    mode: 'cors',
                 });
 
                 const result = await response.json();
                 if (response.ok) {
                     alert(result.message);
+                    toggleContainers(false);
                 } else {
                     alert(result.error);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to connect to the backend. Make sure you are using a Tor-enabled browser.');
+                alert('Failed to connect to the backend.');
             }
         }
 
-        document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
-        document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
-    </script>
-</body>
-</html>
+        async function loadPasswords() {
+            const username = document.getElementById('username').value;
+
+            try {
+                const response = await fetch(`${API_URL}/passwords`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username }),
+                });
+
+                const passwords = await response.json();
+                const passwordList = document.getElementById('passwordList');
+                passwordList.innerHTML = passwords
+                    .map(p => `<li>${p.site}: ${p.password}</li>`)
+                    .join('');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load passwords.');
+            }
+        }
+
+        async function addPassword() {
+            const site = document.getElementById('site').value;
+            const passwordV
