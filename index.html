@@ -35,71 +35,114 @@
             margin-top: 20px;
             color: #ff3333;
         }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <h1>2FA Demo</h1>
 
-    <!-- Enable 2FA -->
-    <h2>Enable 2FA</h2>
-    <form id="enable-2fa-form">
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
-        <button type="submit">Enable 2FA</button>
-    </form>
-    <div id="qr-container" style="display: none;">
-        <h3>Scan this QR code in your 2FA app:</h3>
-        <img id="qr-code" alt="QR Code">
+    <div class="container">
+        <h1>2FA Demo</h1>
+        <div id="auth-container">
+            <!-- Login Form -->
+            <div id="login-section" class="auth-section">
+                <h2>Login</h2>
+                <form id="login-form">
+                    <label for="login-email">Email:</label>
+                    <input type="email" id="login-email" name="email" required>
+                    
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password" name="password" required>
+                    
+                    <label for="twoFACode">2FA Code:</label>
+                    <input type="text" id="twoFACode" name="twoFACode" required>
+                    
+                    <button type="submit">Login</button>
+                </form>
+                <div id="login-message" class="message"></div>
+                <p>Don't have an account? <a href="javascript:void(0);" id="show-signup">Create one</a></p>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signup-section" class="auth-section hidden">
+                <h2>Create Account</h2>
+                <form id="signup-form">
+                    <label for="signup-email">Email:</label>
+                    <input type="email" id="signup-email" name="email" required>
+                    
+                    <label for="signup-password">Password:</label>
+                    <input type="password" id="signup-password" name="password" required>
+                    
+                    <button type="submit">Create Account</button>
+                </form>
+                <div id="signup-message" class="message"></div>
+                <p>Already have an account? <a href="javascript:void(0);" id="show-login">Login</a></p>
+            </div>
+        </div>
+
+        <!-- 2FA Setup (Only shown after login) -->
+        <div id="enable-2fa-section" class="hidden">
+            <h2>Enable 2FA</h2>
+            <p>To increase the security of your account, please enable two-factor authentication (2FA).</p>
+            <button id="enable-2fa-btn">Enable 2FA</button>
+        </div>
+
+        <div id="qr-container" class="hidden">
+            <h3>Scan this QR code in your 2FA app:</h3>
+            <img id="qr-code" alt="QR Code">
+        </div>
     </div>
 
-    <!-- Login with 2FA -->
-    <h2>Login</h2>
-    <form id="login-form">
-        <label for="login-email">Email:</label>
-        <input type="email" id="login-email" name="email" required>
-        
-        <label for="login-password">Password:</label>
-        <input type="password" id="login-password" name="password" required>
-        
-        <label for="twoFACode">2FA Code:</label>
-        <input type="text" id="twoFACode" name="twoFACode" required>
-        
-        <button type="submit">Login</button>
-    </form>
-
-    <div id="login-message" class="message"></div>
-
     <script>
-        // Enable 2FA function
-        document.getElementById('enable-2fa-form').addEventListener('submit', async function(event) {
+        // Switch to signup form
+        document.getElementById('show-signup').addEventListener('click', function() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('signup-section').classList.remove('hidden');
+        });
+
+        // Switch to login form
+        document.getElementById('show-login').addEventListener('click', function() {
+            document.getElementById('signup-section').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
+        });
+
+        // Handle account creation
+        document.getElementById('signup-form').addEventListener('submit', async function(event) {
             event.preventDefault();  // Prevent form submission
             
-            const email = document.getElementById('email').value;
-            const response = await fetch('http://localhost:5000/enable-2fa', {
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            const response = await fetch('http://localhost:5000/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
+                body: JSON.stringify({ email, password })
             });
 
             const data = await response.json();
             if (response.ok) {
-                // Show the QR code for 2FA setup
-                document.getElementById('qr-container').style.display = 'block';
-                document.getElementById('qr-code').src = `data:image/png;base64,${data.qr_code}`;
-                alert("2FA enabled! Scan the QR code in your authenticator app.");
+                alert("Account created successfully! You can now log in.");
+                document.getElementById('signup-section').classList.add('hidden');
+                document.getElementById('login-section').classList.remove('hidden');
             } else {
                 alert("Error: " + data.error);
             }
         });
 
-        // Login with 2FA function
+        // Handle login with 2FA
         document.getElementById('login-form').addEventListener('submit', async function(event) {
             event.preventDefault();  // Prevent form submission
             
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             const twoFACode = document.getElementById('twoFACode').value;
-
+            
             const response = await fetch('http://localhost:5000/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -112,9 +155,35 @@
             if (response.ok) {
                 loginMessage.style.color = '#4CAF50';  // Success message
                 loginMessage.textContent = "Login successful!";
+                // Check if 2FA is enabled
+                if (data.is2FAEnabled) {
+                    document.getElementById('enable-2fa-section').classList.add('hidden');
+                } else {
+                    document.getElementById('enable-2fa-section').classList.remove('hidden');
+                }
             } else {
                 loginMessage.style.color = '#ff3333';  // Error message
                 loginMessage.textContent = "Error: " + data.error;
+            }
+        });
+
+        // Enable 2FA
+        document.getElementById('enable-2fa-btn').addEventListener('click', async function() {
+            const email = document.getElementById('login-email').value; // Same email as logged-in user
+            
+            const response = await fetch('http://localhost:5000/enable-2fa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('qr-container').style.display = 'block';
+                document.getElementById('qr-code').src = `data:image/png;base64,${data.qr_code}`;
+                alert("2FA enabled! Scan the QR code in your authenticator app.");
+            } else {
+                alert("Error: " + data.error);
             }
         });
     </script>
