@@ -7,38 +7,34 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
         }
         .container {
-            width: 80%;
-            margin: 20px auto;
+            max-width: 500px;
+            margin: 30px auto;
             background: #fff;
             padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
         }
-        input {
+        input, button {
             display: block;
             width: 100%;
             margin: 10px 0;
             padding: 10px;
             border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
+            border-radius: 4px;
         }
         button {
-            padding: 10px 20px;
-            background: #007BFF;
+            background-color: #007BFF;
             color: white;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
-            margin: 10px 5px;
         }
         button:hover {
-            background: #0056b3;
+            background-color: #0056b3;
         }
         .hidden {
             display: none;
@@ -47,105 +43,32 @@
 </head>
 <body>
     <div class="container">
-        <h2>Sign Up / Login</h2>
         <div id="auth-section">
-            <input type="text" id="username" placeholder="Enter username">
-            <input type="password" id="password" placeholder="Enter password">
+            <h2>Sign Up / Login</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
             <button id="signup-btn">Sign Up</button>
-            <button id="login-btn">Log In</button>
+            <button id="login-btn">Login</button>
         </div>
         <div id="passwords-section" class="hidden">
-            <h2>Passwords</h2>
-            <input type="text" id="site" placeholder="Enter site name">
-            <input type="text" id="site-password" placeholder="Enter site password">
+            <h2>Manage Passwords</h2>
+            <input type="text" id="site" placeholder="Site">
+            <input type="text" id="site-password" placeholder="Password">
             <button id="add-password-btn">Add Password</button>
-            <h3>Saved Passwords:</h3>
             <ul id="passwords-list"></ul>
         </div>
     </div>
+
     <script>
-        const API_URL = "http://127.0.0.1:5000/api"; // Replace with your deployed URL for production
+        const API_URL = "http://127.0.0.1:5000/api"; // Replace with deployed API URL if needed
         let currentUser = null;
 
-        document.getElementById("signup-btn").addEventListener("click", () => {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
+        document.getElementById('signup-btn').addEventListener('click', () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
             fetch(`${API_URL}/signup`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
             })
-                .then((res) => res.json())
-                .then((data) => {
-                    alert(data.message);
-                    if (data.message === "Signup successful!") {
-                        currentUser = username;
-                        loadPasswords();
-                    }
-                });
-        });
-
-        document.getElementById("login-btn").addEventListener("click", () => {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-
-            fetch(`${API_URL}/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    alert(data.message);
-                    if (data.message === "Login successful!") {
-                        currentUser = username;
-                        loadPasswords();
-                    }
-                });
-        });
-
-        document.getElementById("add-password-btn").addEventListener("click", () => {
-            const site = document.getElementById("site").value;
-            const password = document.getElementById("site-password").value;
-
-            fetch(`${API_URL}/passwords`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Username": currentUser,
-                },
-                body: JSON.stringify({ site, password }),
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    alert(data.message);
-                    if (data.message === "Password added successfully!") {
-                        loadPasswords();
-                    }
-                });
-        });
-
-        function loadPasswords() {
-            fetch(`${API_URL}/passwords`, {
-                method: "GET",
-                headers: {
-                    "X-Username": currentUser,
-                },
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    const list = document.getElementById("passwords-list");
-                    list.innerHTML = "";
-                    data.forEach((item) => {
-                        const li = document.createElement("li");
-                        li.textContent = `${item.site}: ${item.password}`;
-                        list.appendChild(li);
-                    });
-                    document.getElementById("auth-section").classList.add("hidden");
-                    document.getElementById("passwords-section").classList.remove("hidden");
-                });
-        }
-    </script>
-</body>
-</html>
