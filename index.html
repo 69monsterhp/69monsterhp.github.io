@@ -71,7 +71,7 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            fetch(`${API_URL}/signup`, {  // Updated URL
+            fetch(`${API_URL}/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -90,7 +90,7 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            fetch(`${API_URL}/login`, {  // Updated URL
+            fetch(`${API_URL}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -113,7 +113,7 @@
             const site = document.getElementById("site").value;
             const password = document.getElementById("site-password").value;
 
-            fetch(`${API_URL}/passwords`, {  // Correct route
+            fetch(`${API_URL}/passwords`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
