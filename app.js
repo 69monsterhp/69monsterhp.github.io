@@ -1,29 +1,35 @@
 async function handleAuth(action) {
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
+    console.log(`${action} button clicked`); // Debug log for button click
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
 
-  if (!username || !password) {
-    alert('Please enter both username and password.');
-    return;
-  }
-
-  const endpoint = action === 'login' ? '/login' : '/signup';
-  const response = await fetch(`http://127.0.0.1:5000/api${endpoint}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
-  });
-
-  if (response.ok) {
-    if (action === 'login') {
-      document.getElementById('auth').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      fetchPasswords(); // Fetch saved passwords
-    } else {
-      alert('Signup successful! You can now log in.');
+    if (!username || !password) {
+        alert('Please fill in both fields.');
+        return;
     }
-  } else {
-    const error = await response.json();
-    alert(error.error || 'An error occurred.');
-  }
+
+    const endpoint = action === 'login' ? '/login' : '/signup';
+    console.log(`Sending request to ${API_URL}${endpoint}`); // Log API URL
+
+    try {
+        const response = await fetch(`${API_URL}${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        });
+
+        console.log(`Response status: ${response.status}`); // Log response status
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(result.message);
+            toggleContainers(false);
+            loadPasswords(username);
+        } else {
+            alert(result.error || 'Something went wrong.');
+        }
+    } catch (error) {
+        console.error('Error:', error); // Log any errors
+        alert('Failed to connect to the backend.');
+    }
 }
