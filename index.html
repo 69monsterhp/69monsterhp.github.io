@@ -43,13 +43,13 @@
     <div class="container">
         <h2>Password Manager</h2>
 
-        <!-- Main Form for Login / Signup -->
+        <!-- Unified Login/Signup Section -->
         <div id="auth-section">
-            <h3>Login / Create Account</h3>
+            <h3 id="auth-title">Login / Create Account</h3>
             <input type="text" id="username" placeholder="Enter username">
             <input type="password" id="password" placeholder="Enter password">
-            <button id="login-btn">Log In</button>
-            <button id="signup-btn">Create Account</button>
+            <button id="auth-btn">Login</button>
+            <p id="toggle-auth">Don't have an account? <a href="javascript:void(0);" id="toggle-link">Create one</a></p>
         </div>
 
         <!-- 2FA Section (Visible after login) -->
@@ -68,20 +68,41 @@
         const API_URL = "http://localhost:5000/api";
         let currentUser = null;
 
-        // Handle login button click
-        document.getElementById('login-btn').addEventListener('click', () => {
+        // Toggle between Login and Signup
+        document.getElementById('toggle-link').addEventListener('click', () => {
+            const title = document.getElementById('auth-title');
+            const button = document.getElementById('auth-btn');
+            const toggleLink = document.getElementById('toggle-link');
+
+            if (title.innerText === "Login / Create Account") {
+                title.innerText = "Create Account";
+                button.innerText = "Create Account";
+                toggleLink.innerText = "Already have an account? Log in";
+            } else {
+                title.innerText = "Login / Create Account";
+                button.innerText = "Login";
+                toggleLink.innerText = "Don't have an account? Create one";
+            }
+        });
+
+        // Handle Login / Signup button click
+        document.getElementById('auth-btn').addEventListener('click', () => {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const isSignup = document.getElementById('auth-btn').innerText === "Create Account";
 
-            fetch(`${API_URL}/login`, {
-                method: 'POST',
+            const url = isSignup ? `${API_URL}/signup` : `${API_URL}/login`;
+            const method = isSignup ? 'POST' : 'POST';
+
+            fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             })
                 .then(response => response.json())
                 .then(data => {
                     alert(data.message);
-                    if (data.message === 'Login successful!') {
+                    if (data.message === 'Login successful!' || data.message === 'Signup successful!') {
                         currentUser = username;
                         document.getElementById('auth-section').classList.add('hidden');
                         document.getElementById('2fa-section').classList.remove('hidden');
@@ -89,22 +110,7 @@
                         document.getElementById('login-otp').classList.remove('hidden');
                     }
                 })
-                .catch(err => alert('Error logging in.'));
-        });
-
-        // Handle signup button click
-        document.getElementById('signup-btn').addEventListener('click', () => {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            fetch(`${API_URL}/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            })
-                .then(response => response.json())
-                .then(data => alert(data.message))
-                .catch(err => alert('Error signing up.'));
+                .catch(err => alert('Error logging in or signing up.'));
         });
 
         // Enable 2FA functionality
