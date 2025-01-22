@@ -15,7 +15,8 @@
   </div>
 
   <script>
-    const API_URL = 'http://your-tor-hidden-service.onion/api';
+    // Use the actual .onion address of your backend.
+    const API_URL = 'http://r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion/api';
 
     async function handleAuth(action) {
       const username = document.getElementById('username').value;
@@ -32,6 +33,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
+          mode: 'cors', // Ensure CORS is used correctly
         });
 
         const result = await response.json();
