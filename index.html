@@ -37,6 +37,16 @@
         .hidden {
             display: none;
         }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #f1f1f1;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -52,7 +62,15 @@
             <p id="toggle-auth">Don't have an account? <a href="javascript:void(0);" id="toggle-link">Create one</a></p>
         </div>
 
-        <!-- 2FA Section (Visible after login) -->
+        <!-- Passwords Section (Visible after login) -->
+        <div id="passwords-section" class="hidden">
+            <h3>Your Saved Passwords</h3>
+            <ul id="password-list"></ul>
+            <button id="logout-btn">Logout</button>
+            <button id="2fa-settings-btn">2FA Settings</button>
+        </div>
+
+        <!-- 2FA Section (Settings, Visible later) -->
         <div id="2fa-section" class="hidden">
             <h3>Two-Factor Authentication</h3>
             <button id="enable-2fa-btn">Enable 2FA</button>
@@ -105,13 +123,42 @@
                     if (data.message === 'Login successful!' || data.message === 'Signup successful!') {
                         currentUser = username;
                         document.getElementById('auth-section').classList.add('hidden');
-                        document.getElementById('2fa-section').classList.remove('hidden');
+                        document.getElementById('passwords-section').classList.remove('hidden');
+                        loadPasswords();  // Load saved passwords after login
                     } else if (data.message === '2FA code required.') {
                         document.getElementById('login-otp').classList.remove('hidden');
                     }
                 })
                 .catch(err => alert('Error logging in or signing up.'));
         });
+
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            currentUser = null;
+            document.getElementById('passwords-section').classList.add('hidden');
+            document.getElementById('auth-section').classList.remove('hidden');
+        });
+
+        // Load saved passwords for the logged-in user
+        function loadPasswords() {
+            fetch(`${API_URL}/passwords`, {
+                method: 'GET',
+                headers: {
+                    "X-Username": currentUser
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const passwordList = document.getElementById('password-list');
+                    passwordList.innerHTML = "";
+                    data.forEach(item => {
+                        const li = document.createElement("li");
+                        li.textContent = `${item.site}: ${item.password}`;
+                        passwordList.appendChild(li);
+                    });
+                })
+                .catch(err => alert("Error loading passwords."));
+        }
 
         // Enable 2FA functionality
         document.getElementById('enable-2fa-btn').addEventListener('click', () => {
