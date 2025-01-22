@@ -24,11 +24,13 @@
             border-radius: 8px;
         }
         input, button {
-            width: calc(100% - 20px);
-            margin: 5px 0;
+            display: block;
+            width: 100%; /* Full width to ensure no overflow */
+            margin: 10px 0; /* Adds equal spacing on all sides */
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            box-sizing: border-box; /* Ensures padding doesn't exceed container width */
         }
         button {
             background: #007BFF;
@@ -38,6 +40,17 @@
         }
         button:hover {
             background: #0056b3;
+        }
+        ul {
+            padding: 0;
+            list-style: none;
+        }
+        li {
+            margin: 5px 0;
+            padding: 5px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -86,7 +99,9 @@
                 const result = await response.json();
                 if (response.ok) {
                     alert(result.message);
+                    // Redirect to password manager after login/signup
                     toggleContainers(false);
+                    loadPasswords(username);
                 } else {
                     alert(result.error);
                 }
@@ -96,9 +111,7 @@
             }
         }
 
-        async function loadPasswords() {
-            const username = document.getElementById('username').value;
-
+        async function loadPasswords(username) {
             try {
                 const response = await fetch(`${API_URL}/passwords`, {
                     method: 'GET',
@@ -119,4 +132,37 @@
 
         async function addPassword() {
             const site = document.getElementById('site').value;
-            const passwordV
+            const passwordValue = document.getElementById('passwordValue').value;
+            const username = document.getElementById('username').value;
+
+            if (!site || !passwordValue) {
+                alert('Please fill in both fields.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/passwords`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, site, password: passwordValue }),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    loadPasswords(username);
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to save password.');
+            }
+        }
+
+        document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
+        document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
+        document.getElementById('addPasswordButton').addEventListener('click', addPassword);
+    </script>
+</body>
+</html>
