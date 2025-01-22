@@ -9,174 +9,143 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f9;
+            background-color: #f4f4f4;
         }
-        #container {
-            width: 90%;
-            max-width: 400px;
-            background: #ffffff;
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background: #fff;
             padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        h1 {
-            font-size: 24px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        input[type="text"], input[type="password"] {
-            width: calc(100% - 20px);
-            margin-bottom: 15px;
+        input {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
             padding: 10px;
             border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
+            border-radius: 5px;
+            box-sizing: border-box;
         }
         button {
-            width: 100%;
-            padding: 10px;
-            background: #007bff;
+            padding: 10px 20px;
+            background: #007BFF;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
+            margin: 10px 5px;
         }
         button:hover {
             background: #0056b3;
         }
-        #passwordContainer {
+        .hidden {
             display: none;
-        }
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-        li {
-            padding: 8px;
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <div id="container">
-        <h1>Password Manager</h1>
-        <div id="authContainer">
-            <input id="username" type="text" placeholder="Username">
-            <input id="password" type="password" placeholder="Password">
-            <button id="signupButton">Sign Up</button>
-            <button id="loginButton">Login</button>
+    <div class="container">
+        <h2>Sign Up / Login</h2>
+        <div id="auth-section">
+            <input type="text" id="username" placeholder="Enter username">
+            <input type="password" id="password" placeholder="Enter password">
+            <button id="signup-btn">Sign Up</button>
+            <button id="login-btn">Log In</button>
         </div>
-        <div id="passwordContainer">
-            <input id="site" type="text" placeholder="Site Name">
-            <input id="sitePassword" type="text" placeholder="Password">
-            <button id="savePasswordButton">Save Password</button>
-            <h2>Saved Passwords</h2>
-            <ul id="passwordList"></ul>
+        <div id="passwords-section" class="hidden">
+            <h2>Passwords</h2>
+            <input type="text" id="site" placeholder="Enter site name">
+            <input type="text" id="site-password" placeholder="Enter site password">
+            <button id="add-password-btn">Add Password</button>
+            <h3>Saved Passwords:</h3>
+            <ul id="passwords-list"></ul>
         </div>
     </div>
-
     <script>
-        const API_URL = "http://r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion/api";
+        const API_URL = "http://127.0.0.1:5000/api"; // Replace with your Tor .onion URL for deployment
+        let currentUser = null;
 
-        async function handleAuth(action) {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+        document.getElementById("signup-btn").addEventListener("click", () => {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
 
-            if (!username || !password) {
-                alert('Please fill in both fields.');
-                return;
-            }
-
-            const endpoint = action === 'login' ? '/login' : '/signup';
-
-            try {
-                const response = await fetch(`${API_URL}${endpoint}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password }),
-                });
-
-                const result = await response.json();
-                if (response.ok) {
-                    alert(result.message);
-                    if (action === 'login') {
-                        toggleContainers(false);
-                        loadPasswords(username);
+            fetch(`${API_URL}/signup`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            })
+                .then((res) => res.json())
+                .then((data) => {
+                    alert(data.message);
+                    if (data.message === "Signup successful!") {
+                        currentUser = username;
+                        loadPasswords();
                     }
-                } else {
-                    alert(result.error || 'Something went wrong.');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('Failed to connect to the backend.');
-            }
-        }
-
-        function toggleContainers(showPasswordContainer) {
-            document.getElementById('authContainer').style.display = showPasswordContainer ? 'none' : 'block';
-            document.getElementById('passwordContainer').style.display = showPasswordContainer ? 'block' : 'none';
-        }
-
-        async function loadPasswords(username) {
-            try {
-                const response = await fetch(`${API_URL}/passwords?username=${username}`);
-                if (!response.ok) {
-                    throw new Error('Failed to load passwords.');
-                }
-
-                const passwords = await response.json();
-                const passwordList = document.getElementById('passwordList');
-                passwordList.innerHTML = '';
-                passwords.forEach(({ site, password }) => {
-                    const li = document.createElement('li');
-                    li.textContent = `Site: ${site}, Password: ${password}`;
-                    passwordList.appendChild(li);
                 });
-            } catch (error) {
-                console.error(error);
-                alert('Failed to load passwords.');
-            }
-        }
-
-        document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
-        document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
-        document.getElementById('savePasswordButton').addEventListener('click', async () => {
-            const site = document.getElementById('site').value;
-            const sitePassword = document.getElementById('sitePassword').value;
-            const username = document.getElementById('username').value;
-
-            if (!site || !sitePassword) {
-                alert('Please fill in all fields.');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/passwords`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, site, password: sitePassword }),
-                });
-
-                const result = await response.json();
-                if (response.ok) {
-                    alert(result.message);
-                    loadPasswords(username);
-                } else {
-                    alert(result.error || 'Failed to save password.');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('Failed to connect to the backend.');
-            }
         });
+
+        document.getElementById("login-btn").addEventListener("click", () => {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            fetch(`${API_URL}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            })
+                .then((res) => res.json())
+                .then((data) => {
+                    alert(data.message);
+                    if (data.message === "Login successful!") {
+                        currentUser = username;
+                        loadPasswords();
+                    }
+                });
+        });
+
+        document.getElementById("add-password-btn").addEventListener("click", () => {
+            const site = document.getElementById("site").value;
+            const password = document.getElementById("site-password").value;
+
+            fetch(`${API_URL}/passwords`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Username": currentUser,
+                },
+                body: JSON.stringify({ site, password }),
+            })
+                .then((res) => res.json())
+                .then((data) => {
+                    alert(data.message);
+                    if (data.message === "Password added successfully!") {
+                        loadPasswords();
+                    }
+                });
+        });
+
+        function loadPasswords() {
+            fetch(`${API_URL}/passwords`, {
+                method: "GET",
+                headers: {
+                    "X-Username": currentUser,
+                },
+            })
+                .then((res) => res.json())
+                .then((data) => {
+                    const list = document.getElementById("passwords-list");
+                    list.innerHTML = "";
+                    data.forEach((item) => {
+                        const li = document.createElement("li");
+                        li.textContent = `${item.site}: ${item.password}`;
+                        list.appendChild(li);
+                    });
+                    document.getElementById("auth-section").classList.add("hidden");
+                    document.getElementById("passwords-section").classList.remove("hidden");
+                });
+        }
     </script>
 </body>
 </html>
