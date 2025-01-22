@@ -64,12 +64,11 @@
         </div>
     </div>
     <script>
-        const API_URL = "http://127.0.0.1:5000/api"; // Replace with your API URL
+        const API_URL = "http://127.0.0.1:5000/api"; // Update this if deployed
         let currentUser = null;
 
-        // Signup Button Event Listener
         document.getElementById("signup-btn").addEventListener("click", () => {
-            console.log("Signup button clicked"); // Log to confirm button click
+            console.log("Signup button clicked"); // Debugging log
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
@@ -78,27 +77,19 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
             })
-                .then((res) => {
-                    console.log("API call made, response status:", res.status); // Log API status
-                    return res.json();
-                })
+                .then((res) => res.json())
                 .then((data) => {
-                    console.log("API Response:", data); // Log API response
-                    alert(data.message); // Show response message
-                    if (data.message === "Signup successful!") {
-                        currentUser = username;
-                        loadPasswords();
-                    }
+                    console.log("Signup API Response:", data); // Debugging log
+                    alert(data.message);
                 })
                 .catch((err) => {
-                    console.error("API call failed:", err); // Log any errors
-                    alert("An error occurred during signup.");
+                    console.error("Error during signup:", err);
+                    alert("Signup failed.");
                 });
         });
 
-        // Login Button Event Listener
         document.getElementById("login-btn").addEventListener("click", () => {
-            console.log("Login button clicked"); // Log to confirm button click
+            console.log("Login button clicked"); // Debugging log
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
@@ -107,27 +98,22 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
             })
-                .then((res) => {
-                    console.log("API call made, response status:", res.status); // Log API status
-                    return res.json();
-                })
+                .then((res) => res.json())
                 .then((data) => {
-                    console.log("API Response:", data); // Log API response
-                    alert(data.message); // Show response message
+                    console.log("Login API Response:", data); // Debugging log
+                    alert(data.message);
                     if (data.message === "Login successful!") {
                         currentUser = username;
                         loadPasswords();
                     }
                 })
                 .catch((err) => {
-                    console.error("API call failed:", err); // Log any errors
-                    alert("An error occurred during login.");
+                    console.error("Error during login:", err);
+                    alert("Login failed.");
                 });
         });
 
-        // Add Password Button Event Listener
         document.getElementById("add-password-btn").addEventListener("click", () => {
-            console.log("Add Password button clicked"); // Log to confirm button click
             const site = document.getElementById("site").value;
             const password = document.getElementById("site-password").value;
 
@@ -139,38 +125,30 @@
                 },
                 body: JSON.stringify({ site, password }),
             })
-                .then((res) => {
-                    console.log("API call made, response status:", res.status); // Log API status
-                    return res.json();
-                })
+                .then((res) => res.json())
                 .then((data) => {
-                    console.log("API Response:", data); // Log API response
+                    console.log("Add Password API Response:", data); // Debugging log
                     alert(data.message);
                     if (data.message === "Password added successfully!") {
                         loadPasswords();
                     }
                 })
                 .catch((err) => {
-                    console.error("API call failed:", err); // Log any errors
-                    alert("An error occurred while adding the password.");
+                    console.error("Error adding password:", err);
+                    alert("Failed to add password.");
                 });
         });
 
-        // Load Passwords Function
         function loadPasswords() {
-            console.log("Loading passwords..."); // Log loading passwords
             fetch(`${API_URL}/passwords`, {
                 method: "GET",
                 headers: {
                     "X-Username": currentUser,
                 },
             })
-                .then((res) => {
-                    console.log("Passwords API call made, response status:", res.status); // Log API status
-                    return res.json();
-                })
+                .then((res) => res.json())
                 .then((data) => {
-                    console.log("Passwords API Response:", data); // Log API response
+                    console.log("Load Passwords API Response:", data); // Debugging log
                     const list = document.getElementById("passwords-list");
                     list.innerHTML = "";
                     data.forEach((item) => {
@@ -182,7 +160,8 @@
                     document.getElementById("passwords-section").classList.remove("hidden");
                 })
                 .catch((err) => {
-                    console.error("Failed to load passwords:", err); // Log any errors
+                    console.error("Error loading passwords:", err);
+                    alert("Failed to load passwords.");
                 });
         }
     </script>
