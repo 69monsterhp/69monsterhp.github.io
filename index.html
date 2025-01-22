@@ -1,55 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Password Manager</title>
-</head>
-<body>
-  <h1>Password Manager</h1>
-  <div id="auth">
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button id="signupButton">Signup</button>
-    <button id="loginButton">Login</button>
-  </div>
+<script>
+  // Set your backend's .onion address
+  const API_URL = 'http://r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion/api';
 
-  <script>
-    // Use the actual .onion address of your backend.
-    const API_URL = 'http://r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion/api';
+  async function handleAuth(action) {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
 
-    async function handleAuth(action) {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      if (!username || !password) {
-        alert('Please fill in both fields.');
-        return;
-      }
-
-      const endpoint = action === 'login' ? '/login' : '/signup';
-      try {
-        const response = await fetch(`${API_URL}${endpoint}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-          mode: 'cors', // Ensure CORS is used correctly
-        });
-
-        const result = await response.json();
-        if (response.ok) {
-          alert(result.message);
-        } else {
-          alert(result.error);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to connect to the backend. Make sure you are using Tor.');
-      }
+    if (!username || !password) {
+      alert('Please fill in both fields.');
+      return;
     }
 
-    document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
-    document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
-  </script>
-</body>
-</html>
+    const endpoint = action === 'login' ? '/login' : '/signup';
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+        mode: 'cors', // Ensures CORS requests are handled correctly
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        alert(result.message);
+      } else {
+        alert(result.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to connect to the backend. Ensure you are using a Tor-enabled browser.');
+    }
+  }
+
+  document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
+  document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
+</script>
