@@ -1,37 +1,89 @@
-<script>
-  // Set your backend's .onion address
-  const API_URL = 'http://r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion/api';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 300px;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        input, button {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007BFF;
+            color: white;
+            border: none;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Password Manager</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button id="signupButton">Sign Up</button>
+        <button id="loginButton">Log In</button>
+    </div>
 
-  async function handleAuth(action) {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    <script>
+        const API_URL = 'http://r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion/api';
 
-    if (!username || !password) {
-      alert('Please fill in both fields.');
-      return;
-    }
+        async function handleAuth(action) {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-    const endpoint = action === 'login' ? '/login' : '/signup';
-    try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-        mode: 'cors', // Ensures CORS requests are handled correctly
-      });
+            if (!username || !password) {
+                alert('Please fill in both fields.');
+                return;
+            }
 
-      const result = await response.json();
-      if (response.ok) {
-        alert(result.message);
-      } else {
-        alert(result.error);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to connect to the backend. Ensure you are using a Tor-enabled browser.');
-    }
-  }
+            const endpoint = action === 'login' ? '/login' : '/signup';
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                    mode: 'cors',
+                });
 
-  document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
-  document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
-</script>
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to connect to the backend. Make sure you are using a Tor-enabled browser.');
+            }
+        }
+
+        document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
+        document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
+    </script>
+</body>
+</html>
