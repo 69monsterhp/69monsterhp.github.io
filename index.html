@@ -42,18 +42,17 @@
 <body>
     <div class="container">
         <h2>Password Manager</h2>
+
+        <!-- Main Form for Login / Signup -->
         <div id="auth-section">
-            <h3>Login</h3>
-            <input type="text" id="login-username" placeholder="Username">
-            <input type="password" id="login-password" placeholder="Password">
-            <input type="text" id="login-otp" placeholder="2FA Code (if enabled)" class="hidden">
-            <button id="login-btn">Login</button>
-            <h3>Sign Up</h3>
-            <input type="text" id="signup-username" placeholder="Username">
-            <input type="password" id="signup-password" placeholder="Password">
-            <button id="signup-btn">Sign Up</button>
+            <h3>Login / Create Account</h3>
+            <input type="text" id="username" placeholder="Enter username">
+            <input type="password" id="password" placeholder="Enter password">
+            <button id="login-btn">Log In</button>
+            <button id="signup-btn">Create Account</button>
         </div>
 
+        <!-- 2FA Section (Visible after login) -->
         <div id="2fa-section" class="hidden">
             <h3>Two-Factor Authentication</h3>
             <button id="enable-2fa-btn">Enable 2FA</button>
@@ -64,14 +63,86 @@
             </div>
         </div>
     </div>
+
     <script>
         const API_URL = "http://localhost:5000/api";
         let currentUser = null;
 
+        // Handle login button click
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.message === 'Login successful!') {
+                        currentUser = username;
+                        document.getElementById('auth-section').classList.add('hidden');
+                        document.getElementById('2fa-section').classList.remove('hidden');
+                    } else if (data.message === '2FA code required.') {
+                        document.getElementById('login-otp').classList.remove('hidden');
+                    }
+                })
+                .catch(err => alert('Error logging in.'));
+        });
+
+        // Handle signup button click
         document.getElementById('signup-btn').addEventListener('click', () => {
-            const username = document.getElementById('signup-username').value;
-            const password = document.getElementById('signup-password').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
             fetch(`${API_URL}/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+                .then(response => response.json())
+                .then(data => alert(data.message))
+                .catch(err => alert('Error signing up.'));
+        });
+
+        // Enable 2FA functionality
+        document.getElementById('enable-2fa-btn').addEventListener('click', () => {
+            fetch(`${API_URL}/enable-2fa`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    const qrCodeContainer = document.getElementById('qr-code');
+                    const qrImg = document.getElementById('qr-img');
+                    qrCodeContainer.classList.remove('hidden');
+                    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.otp_uri)}`;
+                    document.getElementById('enable-2fa-btn').classList.add('hidden');
+                    document.getElementById('disable-2fa-btn').classList.remove('hidden');
+                })
+                .catch(err => alert('Error enabling 2FA.'));
+        });
+
+        // Disable 2FA functionality
+        document.getElementById('disable-2fa-btn').addEventListener('click', () => {
+            fetch(`${API_URL}/disable-2fa`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    document.getElementById('disable-2fa-btn').classList.add('hidden');
+                    document.getElementById('enable-2fa-btn').classList.remove('hidden');
+                    document.getElementById('qr-code').classList.add('hidden');
+                })
+                .catch(err => alert('Error disabling 2FA.'));
+        });
+    </script>
+</body>
+</html>
