@@ -64,10 +64,11 @@
         </div>
     </div>
     <script>
-        const API_URL = "http://localhost:5000/api"; // Update this if deployed
+        const API_URL = "http://127.0.0.1:5000/api"; // Update this if deployed
         let currentUser = null;
 
         document.getElementById("signup-btn").addEventListener("click", () => {
+            console.log("Signup button clicked"); // Debugging log
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
@@ -77,11 +78,18 @@
                 body: JSON.stringify({ username, password }),
             })
                 .then((res) => res.json())
-                .then((data) => alert(data.message))
-                .catch((err) => alert("Signup failed."));
+                .then((data) => {
+                    console.log("Signup API Response:", data); // Debugging log
+                    alert(data.message);
+                })
+                .catch((err) => {
+                    console.error("Error during signup:", err);
+                    alert("Signup failed.");
+                });
         });
 
         document.getElementById("login-btn").addEventListener("click", () => {
+            console.log("Login button clicked"); // Debugging log
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
@@ -92,13 +100,17 @@
             })
                 .then((res) => res.json())
                 .then((data) => {
+                    console.log("Login API Response:", data); // Debugging log
                     alert(data.message);
                     if (data.message === "Login successful!") {
                         currentUser = username;
                         loadPasswords();
                     }
                 })
-                .catch((err) => alert("Login failed."));
+                .catch((err) => {
+                    console.error("Error during login:", err);
+                    alert("Login failed.");
+                });
         });
 
         document.getElementById("add-password-btn").addEventListener("click", () => {
@@ -115,12 +127,16 @@
             })
                 .then((res) => res.json())
                 .then((data) => {
+                    console.log("Add Password API Response:", data); // Debugging log
                     alert(data.message);
                     if (data.message === "Password added successfully!") {
                         loadPasswords();
                     }
                 })
-                .catch((err) => alert("Failed to add password."));
+                .catch((err) => {
+                    console.error("Error adding password:", err);
+                    alert("Failed to add password.");
+                });
         });
 
         function loadPasswords() {
@@ -132,6 +148,7 @@
             })
                 .then((res) => res.json())
                 .then((data) => {
+                    console.log("Load Passwords API Response:", data); // Debugging log
                     const list = document.getElementById("passwords-list");
                     list.innerHTML = "";
                     data.forEach((item) => {
@@ -142,7 +159,10 @@
                     document.getElementById("auth-section").classList.add("hidden");
                     document.getElementById("passwords-section").classList.remove("hidden");
                 })
-                .catch((err) => alert("Failed to load passwords."));
+                .catch((err) => {
+                    console.error("Error loading passwords:", err);
+                    alert("Failed to load passwords.");
+                });
         }
     </script>
 </body>
