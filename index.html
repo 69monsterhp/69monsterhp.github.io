@@ -5,44 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Password Manager</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background: #fff;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-        input {
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        button {
-            padding: 10px 20px;
-            background: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px 5px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .hidden {
-            display: none;
-        }
+        /* Add your styles here */
     </style>
 </head>
 <body>
@@ -59,90 +22,41 @@
             <input type="text" id="site" placeholder="Enter site name">
             <input type="text" id="site-password" placeholder="Enter site password">
             <button id="add-password-btn">Add Password</button>
+            <button id="logout-btn">Log Out</button>
             <h3>Saved Passwords:</h3>
             <ul id="passwords-list"></ul>
         </div>
     </div>
     <script>
-        const API_URL = "http://localhost:5000/api"; // Update this if deployed
+        const API_URL = "http://localhost:5000/api";
         let currentUser = null;
 
         document.getElementById("signup-btn").addEventListener("click", () => {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-
-            fetch(`${API_URL}/signup`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            })
-                .then((res) => res.json())
-                .then((data) => alert(data.message))
-                .catch((err) => alert("Signup failed."));
+            // Signup logic
         });
 
         document.getElementById("login-btn").addEventListener("click", () => {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-
-            fetch(`${API_URL}/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    alert(data.message);
-                    if (data.message === "Login successful!") {
-                        currentUser = username;
-                        loadPasswords();
-                    }
-                })
-                .catch((err) => alert("Login failed."));
+            // Login logic
         });
 
         document.getElementById("add-password-btn").addEventListener("click", () => {
-            const site = document.getElementById("site").value;
-            const password = document.getElementById("site-password").value;
+            // Add password logic
+        });
 
-            fetch(`${API_URL}/passwords`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Username": currentUser,
-                },
-                body: JSON.stringify({ site, password }),
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    alert(data.message);
-                    if (data.message === "Password added successfully!") {
-                        loadPasswords();
-                    }
-                })
-                .catch((err) => alert("Failed to add password."));
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            // Logout logic
         });
 
         function loadPasswords() {
-            fetch(`${API_URL}/passwords`, {
-                method: "GET",
-                headers: {
-                    "X-Username": currentUser,
-                },
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    const list = document.getElementById("passwords-list");
-                    list.innerHTML = "";
-                    data.forEach((item) => {
-                        const li = document.createElement("li");
-                        li.textContent = `${item.site}: ${item.password}`;
-                        list.appendChild(li);
-                    });
-                    document.getElementById("auth-section").classList.add("hidden");
-                    document.getElementById("passwords-section").classList.remove("hidden");
-                })
-                .catch((err) => alert("Failed to load passwords."));
+            // Load passwords logic
+        }
+
+        function editPassword(site, newPassword) {
+            // Edit password logic
+        }
+
+        function deletePassword(site) {
+            // Delete password logic
         }
     </script>
 </body>
