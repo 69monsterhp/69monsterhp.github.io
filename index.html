@@ -75,6 +75,30 @@
       padding: 10px;
       border-radius: 4px;
       border: 1px solid #e5e7eb;
+      position: relative;
+    }
+
+    li button {
+      margin-left: 5px;
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    li button:nth-of-type(1) {
+      background-color: #10b981; /* Green for Copy */
+    }
+
+    li button:nth-of-type(2) {
+      background-color: #facc15; /* Yellow for Edit */
+    }
+
+    li button:nth-of-type(3) {
+      background-color: #ef4444; /* Red for Delete */
+    }
+
+    li button:hover {
+      opacity: 0.8;
     }
 
     #logout {
@@ -185,24 +209,77 @@
       }
     }
 
+    function renderPasswords(passwords) {
+      const list = document.getElementById('passwordList');
+      list.innerHTML = '';
+      passwords.forEach(({ id, name, password }) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <strong>${name}</strong>: ${password}
+          <button onclick="copyToClipboard('${password}')">Copy</button>
+          <button onclick="editPassword(${id}, '${name}', '${password}')">Edit</button>
+          <button onclick="deletePassword(${id})">Delete</button>
+        `;
+        list.appendChild(li);
+      });
+    }
+
     async function fetchPasswords() {
       const response = await fetch(`${baseUrl}/get-passwords`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        const passwords = await response.json();
+        renderPasswords(passwords);
+      } else {
         console.error('Failed to fetch passwords:', await response.text());
-        return;
       }
+    }
 
-      const data = await response.json();
-      const list = document.getElementById('passwordList');
-      list.innerHTML = '';
-      data.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = `${item.name}: ${item.password}`;
-        list.appendChild(li);
+    async function deletePassword(id) {
+      const response = await fetch(`${baseUrl}/delete-password/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (response.ok) {
+        fetchPasswords();
+      } else {
+        console.error('Failed to delete password:', await response.text());
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Password copied to clipboard!');
+      });
+    }
+
+    function editPassword(id, currentName, currentPassword) {
+      const newName = prompt('Enter new service name:', currentName);
+      const newPassword = prompt('Enter new password:', currentPassword);
+
+      if (newName || newPassword) {
+        const payload = {};
+        if (newName) payload.name = newName;
+        if (newPassword) payload.password = newPassword;
+
+        fetch(`${baseUrl}/edit-password/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }).then(response => {
+          if (response.ok) {
+            fetchPasswords();
+          } else {
+            console.error('Failed to edit password:', response.text());
+          }
+        });
+      }
     }
 
     async function addPassword() {
