@@ -68,7 +68,6 @@
         let currentUser = null;
 
         document.getElementById("signup-btn").addEventListener("click", () => {
-            console.log("Signup button clicked"); // Debugging log
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
@@ -78,18 +77,11 @@
                 body: JSON.stringify({ username, password }),
             })
                 .then((res) => res.json())
-                .then((data) => {
-                    console.log("Signup API Response:", data); // Debugging log
-                    alert(data.message);
-                })
-                .catch((err) => {
-                    console.error("Error during signup:", err);
-                    alert("Signup failed.");
-                });
+                .then((data) => alert(data.message))
+                .catch((err) => alert("Signup failed."));
         });
 
         document.getElementById("login-btn").addEventListener("click", () => {
-            console.log("Login button clicked"); // Debugging log
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
@@ -100,17 +92,13 @@
             })
                 .then((res) => res.json())
                 .then((data) => {
-                    console.log("Login API Response:", data); // Debugging log
                     alert(data.message);
                     if (data.message === "Login successful!") {
                         currentUser = username;
                         loadPasswords();
                     }
                 })
-                .catch((err) => {
-                    console.error("Error during login:", err);
-                    alert("Login failed.");
-                });
+                .catch((err) => alert("Login failed."));
         });
 
         document.getElementById("add-password-btn").addEventListener("click", () => {
@@ -121,34 +109,26 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Username": currentUser,
                 },
                 body: JSON.stringify({ site, password }),
             })
                 .then((res) => res.json())
                 .then((data) => {
-                    console.log("Add Password API Response:", data); // Debugging log
                     alert(data.message);
                     if (data.message === "Password added successfully!") {
                         loadPasswords();
                     }
                 })
-                .catch((err) => {
-                    console.error("Error adding password:", err);
-                    alert("Failed to add password.");
-                });
+                .catch((err) => alert("Failed to add password."));
         });
 
         function loadPasswords() {
             fetch(`${API_URL}/passwords`, {
                 method: "GET",
-                headers: {
-                    "X-Username": currentUser,
-                },
+                headers: {},
             })
                 .then((res) => res.json())
                 .then((data) => {
-                    console.log("Load Passwords API Response:", data); // Debugging log
                     const list = document.getElementById("passwords-list");
                     list.innerHTML = "";
                     data.forEach((item) => {
@@ -156,13 +136,8 @@
                         li.textContent = `${item.site}: ${item.password}`;
                         list.appendChild(li);
                     });
-                    document.getElementById("auth-section").classList.add("hidden");
-                    document.getElementById("passwords-section").classList.remove("hidden");
                 })
-                .catch((err) => {
-                    console.error("Error loading passwords:", err);
-                    alert("Failed to load passwords.");
-                });
+                .catch((err) => alert("Failed to load passwords."));
         }
     </script>
 </body>
