@@ -33,7 +33,7 @@
 
   <script>
     let token = '';
-    const baseUrl = '<your-backend-onion-url>';
+    const baseUrl = 'http://localhost:5000'; // Update this to the backend URL if deployed.
 
     function showDashboard() {
       document.getElementById('auth').style.display = 'none';
@@ -48,36 +48,73 @@
     async function login() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
-      const response = await fetch(`${baseUrl}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await response.json();
-      if (data.token) {
-        token = data.token;
-        showDashboard();
-      } else {
-        alert(data.message || 'Login failed');
+
+      try {
+        const response = await fetch(`${baseUrl}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Login failed:', errorText);
+          alert(`Error: ${response.status} - ${errorText}`);
+          return;
+        }
+
+        const data = await response.json();
+        console.log('Login response:', data);
+
+        if (data.token) {
+          token = data.token;
+          showDashboard();
+        } else {
+          alert(data.message || 'Login failed');
+        }
+      } catch (error) {
+        console.error('Error during login:', error);
+        alert('An error occurred. Please try again.');
       }
     }
 
     async function createAccount() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
-      const response = await fetch(`${baseUrl}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await response.json();
-      alert(data.message || 'Account creation failed');
+
+      try {
+        const response = await fetch(`${baseUrl}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Account creation failed:', errorText);
+          alert(`Error: ${response.status} - ${errorText}`);
+          return;
+        }
+
+        const data = await response.json();
+        console.log('Account creation response:', data);
+        alert(data.message || 'Account created successfully');
+      } catch (error) {
+        console.error('Error during account creation:', error);
+        alert('An error occurred. Please try again.');
+      }
     }
 
     async function fetchPasswords() {
       const response = await fetch(`${baseUrl}/get-passwords`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (!response.ok) {
+        console.error('Failed to fetch passwords:', await response.text());
+        return;
+      }
+
       const data = await response.json();
       const list = document.getElementById('passwordList');
       list.innerHTML = '';
@@ -91,7 +128,8 @@
     async function addPassword() {
       const serviceName = document.getElementById('serviceName').value;
       const password = document.getElementById('servicePassword').value;
-      await fetch(`${baseUrl}/add-password`, {
+
+      const response = await fetch(`${baseUrl}/add-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +137,12 @@
         },
         body: JSON.stringify({ name: serviceName, password }),
       });
-      fetchPasswords();
+
+      if (response.ok) {
+        fetchPasswords();
+      } else {
+        console.error('Failed to add password:', await response.text());
+      }
     }
 
     function logout() {
