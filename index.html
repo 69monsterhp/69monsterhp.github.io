@@ -4,138 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Password Manager</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        input, button {
-            width: 100%;
-            margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        button {
-            background: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        #passwords-section {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div id="auth-section">
-            <h2>Login</h2>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
-            <button id="login-btn">Login</button>
-            <p>Don't have an account? <a href="#" id="create-account">Create one</a></p>
-        </div>
-
-        <div id="passwords-section">
-            <h2>Saved Passwords</h2>
-            <ul id="passwords-list"></ul>
-            <input type="text" id="site" placeholder="Site">
-            <input type="text" id="site-password" placeholder="Password">
-            <button id="add-password-btn">Add</button>
-            <button id="logout-btn">Logout</button>
-        </div>
-    </div>
-
     <script>
-        const API_URL = "http://localhost:5000/api";
+        async function handleLogin() {
+            const username = document.getElementById("loginUsername").value;
+            const password = document.getElementById("loginPassword").value;
 
-        const usernameInput = document.getElementById("username");
-        const passwordInput = document.getElementById("password");
-        const authSection = document.getElementById("auth-section");
-        const passwordsSection = document.getElementById("passwords-section");
-        const passwordsList = document.getElementById("passwords-list");
-
-        let currentUser = null;
-
-        document.getElementById("login-btn").addEventListener("click", () => {
-            fetch(`${API_URL}/login`, {
+            const response = await fetch("http://127.0.0.1:5000/api/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: usernameInput.value,
-                    password: passwordInput.value
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message === "Login successful!") {
-                        currentUser = usernameInput.value;
-                        authSection.style.display = "none";
-                        passwordsSection.style.display = "block";
-                        loadPasswords();
-                    } else {
-                        alert(data.message);
-                    }
-                });
-        });
+                body: JSON.stringify({ username, password }),
+            });
+            const result = await response.json();
+            alert(result.message || result.error);
+        }
 
-        document.getElementById("add-password-btn").addEventListener("click", () => {
-            const site = document.getElementById("site").value;
-            const sitePassword = document.getElementById("site-password").value;
+        async function handleRegister() {
+            const username = document.getElementById("registerUsername").value;
+            const password = document.getElementById("registerPassword").value;
 
-            fetch(`${API_URL}/passwords`, {
+            const response = await fetch("http://127.0.0.1:5000/api/register", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Username": currentUser
-                },
-                body: JSON.stringify({ site, password: sitePassword })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    if (data.message === "Password added successfully!") {
-                        loadPasswords();
-                    }
-                });
-        });
-
-        document.getElementById("logout-btn").addEventListener("click", () => {
-            fetch(`${API_URL}/logout`, { method: "POST" })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    passwordsSection.style.display = "none";
-                    authSection.style.display = "block";
-                });
-        });
-
-        function loadPasswords() {
-            fetch(`${API_URL}/passwords`, {
-                method: "GET",
-                headers: { "X-Username": currentUser }
-            })
-                .then(response => response.json())
-                .then(passwords => {
-                    passwordsList.innerHTML = passwords.map(
-                        p => `<li>${p.site}: ${p.password}</li>`
-                    ).join("");
-                });
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+            const result = await response.json();
+            alert(result.message || result.error);
         }
     </script>
+</head>
+<body>
+    <h1>Password Manager</h1>
+    <div>
+        <h2>Login</h2>
+        <input type="text" id="loginUsername" placeholder="Username" />
+        <input type="password" id="loginPassword" placeholder="Password" />
+        <button onclick="handleLogin()">Login</button>
+    </div>
+    <div>
+        <h2>Register</h2>
+        <input type="text" id="registerUsername" placeholder="Username" />
+        <input type="password" id="registerPassword" placeholder="Password" />
+        <button onclick="handleRegister()">Register</button>
+    </div>
 </body>
 </html>
