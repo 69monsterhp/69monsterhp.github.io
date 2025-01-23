@@ -1,48 +1,16 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
-}
-
-.container {
-    width: 400px;
-    margin: 50px auto;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
     padding: 20px;
 }
 
-input, button {
-    width: calc(100% - 20px);
+input {
+    margin: 5px;
     padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    width: 200px;
 }
 
 button {
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-.hidden {
-    display: none;
-}
-
-ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-ul li {
-    display: flex;
-    justify-content: space-between;
-    margin: 5px 0;
+    padding: 10px 20px;
+    margin: 10px;
 }
