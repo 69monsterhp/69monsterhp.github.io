@@ -4,47 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Password Manager</title>
-    <script>
-        async function handleLogin() {
-            const username = document.getElementById("loginUsername").value;
-            const password = document.getElementById("loginPassword").value;
-
-            const response = await fetch("http://127.0.0.1:5000/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            });
-            const result = await response.json();
-            alert(result.message || result.error);
-        }
-
-        async function handleRegister() {
-            const username = document.getElementById("registerUsername").value;
-            const password = document.getElementById("registerPassword").value;
-
-            const response = await fetch("http://127.0.0.1:5000/api/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            });
-            const result = await response.json();
-            alert(result.message || result.error);
-        }
-    </script>
+    <script src="app.js" defer></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <h1>Password Manager</h1>
-    <div>
-        <h2>Login</h2>
-        <input type="text" id="loginUsername" placeholder="Username" />
-        <input type="password" id="loginPassword" placeholder="Password" />
-        <button onclick="handleLogin()">Login</button>
+    <div id="auth">
+        <input type="text" id="username" placeholder="Username" />
+        <input type="password" id="password" placeholder="Password" />
+        <button id="login">Login</button>
     </div>
-    <div>
-        <h2>Register</h2>
-        <input type="text" id="registerUsername" placeholder="Username" />
-        <input type="password" id="registerPassword" placeholder="Password" />
-        <button onclick="handleRegister()">Register</button>
+    <div id="manager" style="display:none;">
+        <input type="text" id="site" placeholder="Site" />
+        <input type="text" id="password-store" placeholder="Password" />
+        <button id="save">Save</button>
+        <ul id="password-list"></ul>
     </div>
 </body>
 </html>
