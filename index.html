@@ -71,21 +71,21 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            fetch(${API_URL}/signup, {
+            fetch(`${API_URL}/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
             })
                 .then((res) => res.json())
                 .then((data) => alert(data.message))
-                .catch((err) => alert("Signup failed."));
+                .catch(() => alert("Signup failed."));
         });
 
         document.getElementById("login-btn").addEventListener("click", () => {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            fetch(${API_URL}/login, {
+            fetch(`${API_URL}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -98,14 +98,14 @@
                         loadPasswords();
                     }
                 })
-                .catch((err) => alert("Login failed."));
+                .catch(() => alert("Login failed."));
         });
 
         document.getElementById("add-password-btn").addEventListener("click", () => {
             const site = document.getElementById("site").value;
             const password = document.getElementById("site-password").value;
 
-            fetch(${API_URL}/passwords, {
+            fetch(`${API_URL}/passwords`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -120,11 +120,11 @@
                         loadPasswords();
                     }
                 })
-                .catch((err) => alert("Failed to add password."));
+                .catch(() => alert("Failed to add password."));
         });
 
         function loadPasswords() {
-            fetch(${API_URL}/passwords, {
+            fetch(`${API_URL}/passwords`, {
                 method: "GET",
                 headers: {
                     "X-Username": currentUser,
@@ -136,13 +136,13 @@
                     list.innerHTML = "";
                     data.forEach((item) => {
                         const li = document.createElement("li");
-                        li.textContent = ${item.site}: ${item.password};
+                        li.textContent = `${item.site}: ${item.password}`;
                         list.appendChild(li);
                     });
                     document.getElementById("auth-section").classList.add("hidden");
                     document.getElementById("passwords-section").classList.remove("hidden");
                 })
-                .catch((err) => alert("Failed to load passwords."));
+                .catch(() => alert("Failed to load passwords."));
         }
     </script>
 </body>
