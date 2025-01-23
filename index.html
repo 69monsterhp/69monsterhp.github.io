@@ -71,7 +71,7 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            fetch(`${API_URL}/signup`, {
+            fetch(${API_URL}/signup, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -85,7 +85,7 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            fetch(`${API_URL}/login`, {
+            fetch(${API_URL}/login, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -105,7 +105,7 @@
             const site = document.getElementById("site").value;
             const password = document.getElementById("site-password").value;
 
-            fetch(`${API_URL}/passwords`, {
+            fetch(${API_URL}/passwords, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -124,7 +124,7 @@
         });
 
         function loadPasswords() {
-            fetch(`${API_URL}/passwords`, {
+            fetch(${API_URL}/passwords, {
                 method: "GET",
                 headers: {
                     "X-Username": currentUser,
@@ -136,7 +136,7 @@
                     list.innerHTML = "";
                     data.forEach((item) => {
                         const li = document.createElement("li");
-                        li.textContent = `${item.site}: ${item.password}`;
+                        li.textContent = ${item.site}: ${item.password};
                         list.appendChild(li);
                     });
                     document.getElementById("auth-section").classList.add("hidden");
