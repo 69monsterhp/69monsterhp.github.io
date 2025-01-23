@@ -7,195 +7,143 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
         }
         .container {
-            max-width: 600px;
-            margin: auto;
+            width: 80%;
+            margin: 20px auto;
+            background: #fff;
             padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
-        input, button {
+        input {
             display: block;
             width: 100%;
-            padding: 10px;
             margin: 10px 0;
+            padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            box-sizing: border-box;
         }
         button {
-            background-color: #007BFF;
+            padding: 10px 20px;
+            background: #007BFF;
             color: white;
             border: none;
+            border-radius: 5px;
             cursor: pointer;
+            margin: 10px 5px;
         }
         button:hover {
-            background-color: #0056b3;
+            background: #0056b3;
         }
         .hidden {
             display: none;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            background-color: #f1f1f1;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Password Manager</h2>
-
-        <!-- Unified Login/Signup Section -->
+        <h2>Sign Up / Login</h2>
         <div id="auth-section">
-            <h3 id="auth-title">Login / Create Account</h3>
             <input type="text" id="username" placeholder="Enter username">
             <input type="password" id="password" placeholder="Enter password">
-            <button id="auth-btn">Login</button>
-            <p id="toggle-auth">Don't have an account? <a href="javascript:void(0);" id="toggle-link">Create one</a></p>
+            <button id="signup-btn">Sign Up</button>
+            <button id="login-btn">Log In</button>
         </div>
-
-        <!-- Passwords Section (Visible after login) -->
         <div id="passwords-section" class="hidden">
-            <h3>Your Saved Passwords</h3>
-            <ul id="password-list"></ul>
-            <button id="logout-btn">Logout</button>
-            <button id="2fa-settings-btn">2FA Settings</button>
-        </div>
-
-        <!-- 2FA Section (Settings, Visible later) -->
-        <div id="2fa-section" class="hidden">
-            <h3>Two-Factor Authentication</h3>
-            <button id="enable-2fa-btn">Enable 2FA</button>
-            <button id="disable-2fa-btn" class="hidden">Disable 2FA</button>
-            <div id="qr-code" class="hidden">
-                <h4>Scan this QR code in your authenticator app:</h4>
-                <img id="qr-img" alt="QR Code">
-            </div>
+            <h2>Passwords</h2>
+            <input type="text" id="site" placeholder="Enter site name">
+            <input type="text" id="site-password" placeholder="Enter site password">
+            <button id="add-password-btn">Add Password</button>
+            <h3>Saved Passwords:</h3>
+            <ul id="passwords-list"></ul>
         </div>
     </div>
-
     <script>
-        const API_URL = "http://localhost:5000/api";
+        const API_URL = "http://localhost:5000/api"; // Update this if deployed
         let currentUser = null;
 
-        // Toggle between Login and Signup
-        document.getElementById('toggle-link').addEventListener('click', () => {
-            const title = document.getElementById('auth-title');
-            const button = document.getElementById('auth-btn');
-            const toggleLink = document.getElementById('toggle-link');
+        document.getElementById("signup-btn").addEventListener("click", () => {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
 
-            if (title.innerText === "Login / Create Account") {
-                title.innerText = "Create Account";
-                button.innerText = "Create Account";
-                toggleLink.innerText = "Already have an account? Log in";
-            } else {
-                title.innerText = "Login / Create Account";
-                button.innerText = "Login";
-                toggleLink.innerText = "Don't have an account? Create one";
-            }
+            fetch(`${API_URL}/signup`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            })
+                .then((res) => res.json())
+                .then((data) => alert(data.message))
+                .catch((err) => alert("Signup failed."));
         });
 
-        // Handle Login / Signup button click
-        document.getElementById('auth-btn').addEventListener('click', () => {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const isSignup = document.getElementById('auth-btn').innerText === "Create Account";
+        document.getElementById("login-btn").addEventListener("click", () => {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
 
-            const url = isSignup ? `${API_URL}/signup` : `${API_URL}/login`;
-            const method = isSignup ? 'POST' : 'POST';
-
-            fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+            fetch(`${API_URL}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
             })
-                .then(response => response.json())
-                .then(data => {
+                .then((res) => res.json())
+                .then((data) => {
                     alert(data.message);
-                    if (data.message === 'Login successful!' || data.message === 'Signup successful!') {
+                    if (data.message === "Login successful!") {
                         currentUser = username;
-                        document.getElementById('auth-section').classList.add('hidden');
-                        document.getElementById('passwords-section').classList.remove('hidden');
-                        loadPasswords();  // Load saved passwords after login
-                    } else if (data.message === '2FA code required.') {
-                        document.getElementById('login-otp').classList.remove('hidden');
+                        loadPasswords();
                     }
                 })
-                .catch(err => alert('Error logging in or signing up.'));
+                .catch((err) => alert("Login failed."));
         });
 
-        // Logout functionality
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            currentUser = null;
-            document.getElementById('passwords-section').classList.add('hidden');
-            document.getElementById('auth-section').classList.remove('hidden');
+        document.getElementById("add-password-btn").addEventListener("click", () => {
+            const site = document.getElementById("site").value;
+            const password = document.getElementById("site-password").value;
+
+            fetch(`${API_URL}/passwords`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Username": currentUser,
+                },
+                body: JSON.stringify({ site, password }),
+            })
+                .then((res) => res.json())
+                .then((data) => {
+                    alert(data.message);
+                    if (data.message === "Password added successfully!") {
+                        loadPasswords();
+                    }
+                })
+                .catch((err) => alert("Failed to add password."));
         });
 
-        // Load saved passwords for the logged-in user
         function loadPasswords() {
             fetch(`${API_URL}/passwords`, {
-                method: 'GET',
+                method: "GET",
                 headers: {
-                    "X-Username": currentUser
-                }
+                    "X-Username": currentUser,
+                },
             })
-                .then(response => response.json())
-                .then(data => {
-                    const passwordList = document.getElementById('password-list');
-                    passwordList.innerHTML = "";
-                    data.forEach(item => {
+                .then((res) => res.json())
+                .then((data) => {
+                    const list = document.getElementById("passwords-list");
+                    list.innerHTML = "";
+                    data.forEach((item) => {
                         const li = document.createElement("li");
                         li.textContent = `${item.site}: ${item.password}`;
-                        passwordList.appendChild(li);
+                        list.appendChild(li);
                     });
+                    document.getElementById("auth-section").classList.add("hidden");
+                    document.getElementById("passwords-section").classList.remove("hidden");
                 })
-                .catch(err => alert("Error loading passwords."));
+                .catch((err) => alert("Failed to load passwords."));
         }
-
-        // Enable 2FA functionality
-        document.getElementById('enable-2fa-btn').addEventListener('click', () => {
-            fetch(`${API_URL}/enable-2fa`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    const qrCodeContainer = document.getElementById('qr-code');
-                    const qrImg = document.getElementById('qr-img');
-                    qrCodeContainer.classList.remove('hidden');
-                    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.otp_uri)}`;
-                    document.getElementById('enable-2fa-btn').classList.add('hidden');
-                    document.getElementById('disable-2fa-btn').classList.remove('hidden');
-                })
-                .catch(err => alert('Error enabling 2FA.'));
-        });
-
-        // Disable 2FA functionality
-        document.getElementById('disable-2fa-btn').addEventListener('click', () => {
-            fetch(`${API_URL}/disable-2fa`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    document.getElementById('disable-2fa-btn').classList.add('hidden');
-                    document.getElementById('enable-2fa-btn').classList.remove('hidden');
-                    document.getElementById('qr-code').classList.add('hidden');
-                })
-                .catch(err => alert('Error disabling 2FA.'));
-        });
     </script>
 </body>
 </html>
