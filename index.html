@@ -1,10 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Welcome</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Manager</title>
+    <script>
+        async function addPassword() {
+            const service = document.getElementById('service').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('http://127.0.0.1:5000/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ service, username, password })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+        }
+
+        async function retrievePassword() {
+            const service = document.getElementById('retrieveService').value;
+            const username = document.getElementById('retrieveUsername').value;
+            const password = document.getElementById('retrievePassword').value;
+
+            const response = await fetch('http://127.0.0.1:5000/retrieve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ service, username, password })
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert(`Service: ${result.service}\nUsername: ${result.username}\nPassword: ${result.password}`);
+            } else {
+                alert(result.message);
+            }
+        }
+    </script>
 </head>
 <body>
-    <h1>Welcome to the Password Manager</h1>
-    <a href="/register">Register</a> | <a href="/login">Login</a>
+    <h1>Password Manager</h1>
+
+    <h2>Add Password</h2>
+    <input id="service" placeholder="Service"><br>
+    <input id="username" placeholder="Username"><br>
+    <input id="password" placeholder="Password" type="password"><br>
+    <button onclick="addPassword()">Add Password</button>
+
+    <h2>Retrieve Password</h2>
+    <input id="retrieveService" placeholder="Service"><br>
+    <input id="retrieveUsername" placeholder="Username"><br>
+    <input id="retrievePassword" placeholder="Password" type="password"><br>
+    <button onclick="retrievePassword()">Retrieve Password</button>
 </body>
 </html>
