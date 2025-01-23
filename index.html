@@ -1,144 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Manager</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background: #fff;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-        input {
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        button {
-            padding: 10px 20px;
-            background: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px 5px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .hidden {
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Manager</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { margin: 5px; padding: 8px; }
+    ul { list-style-type: none; padding: 0; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Sign Up / Login</h2>
-        <div id="auth-section">
-            <input type="text" id="username" placeholder="Enter username">
-            <input type="password" id="password" placeholder="Enter password">
-            <button id="signup-btn">Sign Up</button>
-            <button id="login-btn">Log In</button>
-        </div>
-        <div id="passwords-section" class="hidden">
-            <h2>Passwords</h2>
-            <input type="text" id="site" placeholder="Enter site name">
-            <input type="text" id="site-password" placeholder="Enter site password">
-            <button id="add-password-btn">Add Password</button>
-            <h3>Saved Passwords:</h3>
-            <ul id="passwords-list"></ul>
-        </div>
-    </div>
-    <script>
-        const API_URL = "http://127.0.0.1:5000/api"; // Update this if deployed
-        let currentUser = null;
+  <h1>Password Manager</h1>
+  <div>
+    <label for="onionUrl">Backend Tor URL:</label>
+    <input type="text" id="onionUrl" placeholder="Enter Tor .onion address">
+  </div>
+  <div>
+    <h2>Add New Password</h2>
+    <input type="text" id="serviceName" placeholder="Service Name">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="addPassword()">Add Password</button>
+  </div>
+  <div>
+    <h2>Stored Passwords</h2>
+    <button onclick="fetchPasswords()">Fetch Passwords</button>
+    <ul id="passwordList"></ul>
+  </div>
 
-        document.getElementById("signup-btn").addEventListener("click", () => {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
+  <script>
+    async function fetchPasswords() {
+      const onionUrl = document.getElementById('onionUrl').value;
+      const response = await fetch(`${onionUrl}/get-passwords`);
+      const data = await response.json();
+      const list = document.getElementById('passwordList');
+      list.innerHTML = '';
+      data.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.name}: ${item.password}`;
+        list.appendChild(li);
+      });
+    }
 
-            fetch(`${API_URL}/signup`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            })
-                .then((res) => res.json())
-                .then((data) => alert(data.message))
-                .catch((err) => alert("Signup failed."));
-        });
-
-        document.getElementById("login-btn").addEventListener("click", () => {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-
-            fetch(`${API_URL}/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    alert(data.message);
-                    if (data.message === "Login successful!") {
-                        currentUser = username;
-                        loadPasswords();
-                    }
-                })
-                .catch((err) => alert("Login failed."));
-        });
-
-        document.getElementById("add-password-btn").addEventListener("click", () => {
-            const site = document.getElementById("site").value;
-            const password = document.getElementById("site-password").value;
-
-            fetch(`${API_URL}/passwords`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ site, password }),
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    alert(data.message);
-                    if (data.message === "Password added successfully!") {
-                        loadPasswords();
-                    }
-                })
-                .catch((err) => alert("Failed to add password."));
-        });
-
-        function loadPasswords() {
-            fetch(`${API_URL}/passwords`, {
-                method: "GET",
-                headers: {},
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    const list = document.getElementById("passwords-list");
-                    list.innerHTML = "";
-                    data.forEach((item) => {
-                        const li = document.createElement("li");
-                        li.textContent = `${item.site}: ${item.password}`;
-                        list.appendChild(li);
-                    });
-                })
-                .catch((err) => alert("Failed to load passwords."));
-        }
-    </script>
+    async function addPassword() {
+      const onionUrl = document.getElementById('onionUrl').value;
+      const serviceName = document.getElementById('serviceName').value;
+      const password = document.getElementById('password').value;
+      await fetch(`${onionUrl}/add-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: serviceName, password: password }),
+      });
+      fetchPasswords();
+    }
+  </script>
 </body>
 </html>
