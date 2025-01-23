@@ -1,56 +1,10 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-
-function App() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [service, setService] = useState('');
-  const [servicePassword, setServicePassword] = useState('');
-  const [passwords, setPasswords] = useState([]);
-
-  const register = async () => {
-    await axios.post('/register', { username, password });
-    alert('User registered!');
-  };
-
-  const addPassword = async () => {
-    await axios.post('/add_password', { user_id: 1, service, password: servicePassword });
-    alert('Password added!');
-  };
-
-  const getPasswords = async () => {
-    const response = await axios.get('/get_passwords', { params: { user_id: 1 } });
-    setPasswords(response.data);
-  };
-
-  return (
-    <div>
-      <h1>Password Manager</h1>
-      <div>
-        <h2>Register</h2>
-        <input placeholder="Username" onChange={(e) => setUsername(e.target.value)} />
-        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-        <button onClick={register}>Register</button>
-      </div>
-      <div>
-        <h2>Add Password</h2>
-        <input placeholder="Service" onChange={(e) => setService(e.target.value)} />
-        <input type="password" placeholder="Password" onChange={(e) => setServicePassword(e.target.value)} />
-        <button onClick={addPassword}>Add Password</button>
-      </div>
-      <div>
-        <h2>Stored Passwords</h2>
-        <button onClick={getPasswords}>Get Passwords</button>
-        <ul>
-          {passwords.map((p, index) => (
-            <li key={index}>
-              {p.service}: {p.password}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-export default App;
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome</title>
+</head>
+<body>
+    <h1>Welcome to the Password Manager</h1>
+    <a href="/register">Register</a> | <a href="/login">Login</a>
+</body>
+</html>
