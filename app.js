@@ -1,35 +1,36 @@
-async function handleAuth(action) {
-    console.log(`${action} button clicked`); // Debug log for button click
+const API_URL = 'http://your-tor-hidden-service.onion'; // Replace with your hidden service URL
+
+document.getElementById('login').addEventListener('click', async () => {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
 
-    if (!username || !password) {
-        alert('Please fill in both fields.');
-        return;
+    const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+    });
+
+    if (response.ok) {
+        document.getElementById('auth').style.display = 'none';
+        document.getElementById('manager').style.display = 'block';
+    } else {
+        alert('Login failed!');
     }
+});
 
-    const endpoint = action === 'login' ? '/login' : '/signup';
-    console.log(`Sending request to ${API_URL}${endpoint}`); // Log API URL
+document.getElementById('save').addEventListener('click', async () => {
+    const site = document.getElementById('site').value;
+    const password = document.getElementById('password-store').value;
 
-    try {
-        const response = await fetch(`${API_URL}${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password }),
-        });
+    const response = await fetch(`${API_URL}/passwords`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site, password }),
+    });
 
-        console.log(`Response status: ${response.status}`); // Log response status
-        const result = await response.json();
-
-        if (response.ok) {
-            alert(result.message);
-            toggleContainers(false);
-            loadPasswords(username);
-        } else {
-            alert(result.error || 'Something went wrong.');
-        }
-    } catch (error) {
-        console.error('Error:', error); // Log any errors
-        alert('Failed to connect to the backend.');
+    if (response.ok) {
+        alert('Password saved!');
+    } else {
+        alert('Failed to save password.');
     }
-}
+});
