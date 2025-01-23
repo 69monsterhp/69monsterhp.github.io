@@ -3,90 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Password Manager</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
-            background-color: #f4f4f9;
+            padding: 0;
+            background-color: #f4f4f4;
         }
-        .form-container {
-            background: white;
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
             padding: 20px;
+            background: white;
             border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        input[type="text"], input[type="password"], button {
+        input, button {
             width: 100%;
-            padding: 10px;
             margin: 10px 0;
-            border: 1px solid #ccc;
+            padding: 10px;
+            border: 1px solid #ddd;
             border-radius: 5px;
         }
         button {
-            background-color: #007bff;
+            background: #007BFF;
             color: white;
-            cursor: pointer;
             border: none;
+            cursor: pointer;
         }
         button:hover {
-            background-color: #0056b3;
+            background: #0056b3;
         }
-        .switch {
-            text-align: center;
-            margin-top: 10px;
-        }
-        .switch a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        .switch a:hover {
-            text-decoration: underline;
+        #passwords-section {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h1>Login</h1>
-        <input type="text" id="username" placeholder="Enter your username">
-        <input type="password" id="password" placeholder="Enter your password">
-        <button id="login-btn">Log In</button>
-        <div class="switch">
-            <p>Don't have an account? <a href="./create-account.html">Create account</a></p>
+    <div class="container">
+        <div id="auth-section">
+            <h2>Login</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button id="login-btn">Login</button>
+            <p>Don't have an account? <a href="#" id="create-account">Create one</a></p>
+        </div>
+
+        <div id="passwords-section">
+            <h2>Saved Passwords</h2>
+            <ul id="passwords-list"></ul>
+            <input type="text" id="site" placeholder="Site">
+            <input type="text" id="site-password" placeholder="Password">
+            <button id="add-password-btn">Add</button>
+            <button id="logout-btn">Logout</button>
         </div>
     </div>
+
     <script>
         const API_URL = "http://localhost:5000/api";
 
-        document.getElementById("login-btn").addEventListener("click", () => {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+        const authSection = document.getElementById("auth-section");
+        const passwordsSection = document.getElementById("passwords-section");
+        const passwordsList = document.getElementById("passwords-list");
 
+        let currentUser = null;
+
+        document.getElementById("login-btn").addEventListener("click", () => {
             fetch(`${API_URL}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({
+                    username: usernameInput.value,
+                    password: passwordInput.value
+                })
             })
-                .then(res => res.json())
+                .then(response => response.json())
                 .then(data => {
                     if (data.message === "Login successful!") {
-                        alert("Welcome back!");
-                        window.location.href = "dashboard.html";
+                        currentUser = usernameInput.value;
+                        authSection.style.display = "none";
+                        passwordsSection.style.display = "block";
+                        loadPasswords();
                     } else {
                         alert(data.message);
                     }
-                })
-                .catch(() => alert("Login failed. Please try again."));
+                });
         });
+
+        document.getElementById("add-password-btn").addEventListener("click", () => {
+            const site = document.getElementById("site").value;
+            const sitePassword = document.getElementById("site-password").value;
+
+            fetch(`${API_URL}/passwords`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Username": currentUser
+                },
+                body: JSON.stringify({ site, password: sitePassword })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.message === "Password added successfully!") {
+                        loadPasswords();
+                    }
+                });
+        });
+
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            fetch(`${API_URL}/logout`, { method: "POST" })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    passwordsSection.style.display = "none";
+                    authSection.style.display = "block";
+                });
+        });
+
+        function loadPasswords() {
+            fetch(`${API_URL}/passwords`, {
+                method: "GET",
+                headers: { "X-Username": currentUser }
+            })
+                .then(response => response.json())
+                .then(passwords => {
+                    passwordsList.innerHTML = passwords.map(
+                        p => `<li>${p.site}: ${p.password}</li>`
+                    ).join("");
+                });
+        }
     </script>
 </body>
 </html>
