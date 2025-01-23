@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .form-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        input[type="text"], input[type="password"], button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .switch {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .switch a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .switch a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Create Account</h1>
+        <input type="text" id="new-username" placeholder="Choose a username">
+        <input type="password" id="new-password" placeholder="Choose a password">
+        <button id="signup-btn">Sign Up</button>
+        <div class="switch">
+            <p>Already have an account? <a href="./index.html">Login</a></p>
+        </div>
+    </div>
+    <script>
+        const API_URL = "http://localhost:5000/api";
+
+        document.getElementById("signup-btn").addEventListener("click", () => {
+            const username = document.getElementById("new-username").value;
+            const password = document.getElementById("new-password").value;
+
+            fetch(`${API_URL}/signup`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.message === "Signup successful!") {
+                        window.location.href = "index.html";
+                    }
+                })
+                .catch(() => alert("Signup failed. Please try again."));
+        });
+    </script>
+</body>
+</html>
