@@ -3,127 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Manager</title>
+    <title>Index - Login</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
         }
-        .password-item {
-            margin-bottom: 10px;
+        .form-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        input[type="text"], input[type="password"], button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
         button {
-            margin-left: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .switch {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .switch a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .switch a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <h1>Password Manager</h1>
-    <div>
-        <button id="logoutButton">Logout</button>
+    <div class="form-container">
+        <h1>Login</h1>
+        <input type="text" id="username" placeholder="Enter your username">
+        <input type="password" id="password" placeholder="Enter your password">
+        <button id="login-btn">Log In</button>
+        <div class="switch">
+            <p>Don't have an account? <a href="signup.html">Create one</a></p>
+        </div>
     </div>
-    <h2>Saved Passwords</h2>
-    <div id="passwordList"></div>
-    <h2>Edit/Add Password</h2>
-    <form id="passwordForm">
-        <input type="hidden" id="passwordId" />
-        <input type="text" id="site" placeholder="Site Name" required />
-        <input type="password" id="password" placeholder="Password" required />
-        <button type="submit">Save</button>
-    </form>
     <script>
-        const apiBase = 'http://127.0.0.1:5000/api';
-        const username = 'testuser'; // Replace with logged-in username
-        
-        // Logout
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            const response = await fetch(`${apiBase}/logout`, {
-                method: 'POST',
-            });
-            if (response.ok) {
-                alert('Logged out successfully!');
-                location.reload();
-            }
+        const API_URL = "http://localhost:5000/api";
+
+        document.getElementById("login-btn").addEventListener("click", () => {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            fetch(`${API_URL}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.message === "Login successful!") {
+                        alert("Welcome back!");
+                        window.location.href = "dashboard.html";
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(() => alert("Login failed. Please try again."));
         });
-
-        // Fetch Passwords
-        async function fetchPasswords() {
-            const response = await fetch(`${apiBase}/passwords`, {
-                headers: { 'X-Username': username },
-            });
-            const passwords = await response.json();
-            const passwordList = document.getElementById('passwordList');
-            passwordList.innerHTML = '';
-            passwords.forEach(password => {
-                const div = document.createElement('div');
-                div.className = 'password-item';
-                div.innerHTML = `
-                    <strong>${password.site}</strong> - ${password.password}
-                    <button onclick="editPassword(${password.id}, '${password.site}', '${password.password}')">Edit</button>
-                    <button onclick="deletePassword(${password.id})">Delete</button>
-                `;
-                passwordList.appendChild(div);
-            });
-        }
-
-        // Add/Edit Password
-        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('passwordId').value;
-            const site = document.getElementById('site').value;
-            const password = document.getElementById('password').value;
-
-            if (id) {
-                // Edit Password
-                await fetch(`${apiBase}/passwords/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Username': username,
-                    },
-                    body: JSON.stringify({ site, password }),
-                });
-                alert('Password updated!');
-            } else {
-                // Add Password
-                await fetch(`${apiBase}/passwords`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Username': username,
-                    },
-                    body: JSON.stringify({ site, password }),
-                });
-                alert('Password added!');
-            }
-
-            document.getElementById('passwordId').value = '';
-            document.getElementById('site').value = '';
-            document.getElementById('password').value = '';
-            fetchPasswords();
-        });
-
-        // Edit Password Helper
-        function editPassword(id, site, password) {
-            document.getElementById('passwordId').value = id;
-            document.getElementById('site').value = site;
-            document.getElementById('password').value = password;
-        }
-
-        // Delete Password
-        async function deletePassword(id) {
-            if (confirm('Are you sure you want to delete this password?')) {
-                await fetch(`${apiBase}/passwords/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'X-Username': username },
-                });
-                alert('Password deleted!');
-                fetchPasswords();
-            }
-        }
-
-        // Initial Fetch
-        fetchPasswords();
     </script>
 </body>
 </html>
