@@ -10,74 +10,81 @@
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
-            background-color: #f4f4f4;
+            background-color: #f4f4f9;
         }
-        .container {
-            width: 300px;
+        #container {
+            width: 90%;
+            max-width: 400px;
+            background: #ffffff;
             padding: 20px;
-            background: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        input, button {
-            display: block;
-            width: 100%; /* Full width to ensure no overflow */
-            margin: 10px 0; /* Adds equal spacing on all sides */
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="password"] {
+            width: calc(100% - 20px);
+            margin-bottom: 15px;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            box-sizing: border-box; /* Ensures padding doesn't exceed container width */
+            font-size: 16px;
         }
         button {
-            background: #007BFF;
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
             color: white;
             border: none;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
         }
         button:hover {
             background: #0056b3;
         }
+        #passwordContainer {
+            display: none;
+        }
         ul {
-            padding: 0;
             list-style: none;
+            padding: 0;
         }
         li {
-            margin: 5px 0;
-            padding: 5px;
+            padding: 8px;
             background: #f9f9f9;
             border: 1px solid #ddd;
             border-radius: 4px;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="container" id="authContainer">
-        <h2>Password Manager</h2>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <button id="signupButton">Sign Up</button>
-        <button id="loginButton">Log In</button>
-    </div>
-
-    <div class="container" id="passwordContainer" style="display: none;">
-        <h2>Manage Passwords</h2>
-        <input type="text" id="site" placeholder="Site">
-        <input type="text" id="passwordValue" placeholder="Password">
-        <button id="addPasswordButton">Add Password</button>
-        <ul id="passwordList"></ul>
+    <div id="container">
+        <h1>Password Manager</h1>
+        <div id="authContainer">
+            <input id="username" type="text" placeholder="Username">
+            <input id="password" type="password" placeholder="Password">
+            <button id="signupButton">Sign Up</button>
+            <button id="loginButton">Login</button>
+        </div>
+        <div id="passwordContainer">
+            <input id="site" type="text" placeholder="Site Name">
+            <input id="sitePassword" type="text" placeholder="Password">
+            <button id="savePasswordButton">Save Password</button>
+            <h2>Saved Passwords</h2>
+            <ul id="passwordList"></ul>
+        </div>
     </div>
 
     <script>
-        const API_URL = 'http://r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion/api';
-
-        function toggleContainers(authVisible) {
-            document.getElementById('authContainer').style.display = authVisible ? 'block' : 'none';
-            document.getElementById('passwordContainer').style.display = authVisible ? 'none' : 'block';
-        }
+        const API_URL = "http://r5ehlvnsyiznusu6tls4y6fyng2bkp2upyxf643k6qbrghwgoszyvkqd.onion/api";
 
         async function handleAuth(action) {
             const username = document.getElementById('username').value;
@@ -89,6 +96,7 @@
             }
 
             const endpoint = action === 'login' ? '/login' : '/signup';
+
             try {
                 const response = await fetch(`${API_URL}${endpoint}`, {
                     method: 'POST',
@@ -99,44 +107,54 @@
                 const result = await response.json();
                 if (response.ok) {
                     alert(result.message);
-                    // Redirect to password manager after login/signup
-                    toggleContainers(false);
-                    loadPasswords(username);
+                    if (action === 'login') {
+                        toggleContainers(false);
+                        loadPasswords(username);
+                    }
                 } else {
-                    alert(result.error);
+                    alert(result.error || 'Something went wrong.');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error(error);
                 alert('Failed to connect to the backend.');
             }
         }
 
+        function toggleContainers(showPasswordContainer) {
+            document.getElementById('authContainer').style.display = showPasswordContainer ? 'none' : 'block';
+            document.getElementById('passwordContainer').style.display = showPasswordContainer ? 'block' : 'none';
+        }
+
         async function loadPasswords(username) {
             try {
-                const response = await fetch(`${API_URL}/passwords`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username }),
-                });
+                const response = await fetch(`${API_URL}/passwords?username=${username}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load passwords.');
+                }
 
                 const passwords = await response.json();
                 const passwordList = document.getElementById('passwordList');
-                passwordList.innerHTML = passwords
-                    .map(p => `<li>${p.site}: ${p.password}</li>`)
-                    .join('');
+                passwordList.innerHTML = '';
+                passwords.forEach(({ site, password }) => {
+                    const li = document.createElement('li');
+                    li.textContent = `Site: ${site}, Password: ${password}`;
+                    passwordList.appendChild(li);
+                });
             } catch (error) {
-                console.error('Error:', error);
+                console.error(error);
                 alert('Failed to load passwords.');
             }
         }
 
-        async function addPassword() {
+        document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
+        document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
+        document.getElementById('savePasswordButton').addEventListener('click', async () => {
             const site = document.getElementById('site').value;
-            const passwordValue = document.getElementById('passwordValue').value;
+            const sitePassword = document.getElementById('sitePassword').value;
             const username = document.getElementById('username').value;
 
-            if (!site || !passwordValue) {
-                alert('Please fill in both fields.');
+            if (!site || !sitePassword) {
+                alert('Please fill in all fields.');
                 return;
             }
 
@@ -144,7 +162,7 @@
                 const response = await fetch(`${API_URL}/passwords`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, site, password: passwordValue }),
+                    body: JSON.stringify({ username, site, password: sitePassword }),
                 });
 
                 const result = await response.json();
@@ -152,17 +170,13 @@
                     alert(result.message);
                     loadPasswords(username);
                 } else {
-                    alert(result.error);
+                    alert(result.error || 'Failed to save password.');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to save password.');
+                console.error(error);
+                alert('Failed to connect to the backend.');
             }
-        }
-
-        document.getElementById('signupButton').addEventListener('click', () => handleAuth('signup'));
-        document.getElementById('loginButton').addEventListener('click', () => handleAuth('login'));
-        document.getElementById('addPasswordButton').addEventListener('click', addPassword);
+        });
     </script>
 </body>
 </html>
