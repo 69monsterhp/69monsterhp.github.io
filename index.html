@@ -68,11 +68,24 @@
       padding: 10px;
       border-radius: 4px;
       border: 1px solid #e5e7eb;
-      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: grab;
     }
 
-    li.selected {
-      background-color: #e5e7eb;
+    li.dragging {
+      opacity: 0.5;
+    }
+
+    .actions {
+      display: flex;
+      gap: 5px;
+    }
+
+    .actions button {
+      font-size: 14px;
+      padding: 5px;
     }
   </style>
 </head>
@@ -89,23 +102,24 @@
     <div id="dashboard">
       <h1>Welcome</h1>
       <button id="logout" onclick="logout()">Logout</button>
-      <h2>Stored Passwords</h2>
-      <ul id="passwordList"></ul>
       <h2>Add New Password</h2>
       <input type="text" id="serviceName" placeholder="Service Name">
-      <input type="text" id="servicePassword" placeholder="Password" id="newPasswordInput">
+      <input type="text" id="servicePassword" placeholder="Password">
       <button onclick="addPassword()">Add Password</button>
+      <h2>Stored Passwords</h2>
+      <ul id="passwordList"></ul>
     </div>
   </div>
 
   <script>
     let token = '';
     const baseUrl = 'http://localhost:5000';
+    let draggedElement = null;
 
     function showDashboard() {
       document.getElementById('auth').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
-      fetchPasswords(); // Fetch passwords immediately after login
+      fetchPasswords();
     }
 
     function showAuth() {
@@ -130,25 +144,15 @@
           body: JSON.stringify({ username, password }),
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Login failed:', errorText);
-          alert(`Error: ${response.status} - ${errorText}`);
-          return;
-        }
-
-        const data = await response.json();
-        console.log('Login response:', data);
-
-        if (data.token) {
+        if (response.ok) {
+          const data = await response.json();
           token = data.token;
           showDashboard();
         } else {
-          alert(data.message || 'Login failed');
+          alert('Login failed');
         }
       } catch (error) {
-        console.error('Error during login:', error);
-        alert('An error occurred. Please try again.');
+        console.error('Login error:', error);
       }
     }
 
@@ -163,19 +167,13 @@
           body: JSON.stringify({ username, password }),
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Account creation failed:', errorText);
-          alert(`Error: ${response.status} - ${errorText}`);
-          return;
+        if (response.ok) {
+          alert('Account created successfully');
+        } else {
+          alert('Failed to create account');
         }
-
-        const data = await response.json();
-        console.log('Account creation response:', data);
-        alert(data.message || 'Account created successfully');
       } catch (error) {
-        console.error('Error during account creation:', error);
-        alert('An error occurred. Please try again.');
+        console.error('Error creating account:', error);
       }
     }
 
@@ -184,31 +182,117 @@
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) {
-        console.error('Failed to fetch passwords:', await response.text());
-        return;
-      }
+      if (response.ok) {
+        const data = await response.json();
+        const list = document.getElementById('passwordList');
+        list.innerHTML = '';
+        data.forEach((item, index) => {
+          const li = document.createElement('li');
+          li.setAttribute('draggable', true);
+          li.dataset.id = item.id;
+          li.textContent = `${index + 1}. ${item.name}: `;
 
-      const data = await response.json();
-      const list = document.getElementById('passwordList');
-      list.innerHTML = '';
-      data.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = `${item.name}: ${item.password}`;
-        li.onclick = () => copyPassword(item.password);
-        list.appendChild(li);
-      });
+          const actions = document.createElement('div');
+          actions.classList.add('actions');
+
+          const copyBtn = document.createElement('button');
+          copyBtn.textContent = 'Copy';
+          copyBtn.onclick = () => navigator.clipboard.writeText(item.password);
+
+          const editBtn = document.createElement('button');
+          editBtn.textContent = 'Edit';
+          editBtn.onclick = () => editPassword(item.id, item.name, item.password);
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.onclick = () => deletePassword(item.id);
+
+          actions.appendChild(copyBtn);
+          actions.appendChild(editBtn);
+          actions.appendChild(deleteBtn);
+
+          li.appendChild(actions);
+
+          li.addEventListener('dragstart', () => {
+            draggedElement = li;
+            li.classList.add('dragging');
+          });
+
+          li.addEventListener('dragend', () => {
+            li.classList.remove('dragging');
+            draggedElement = null;
+          });
+
+          list.appendChild(li);
+        });
+
+        list.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          const afterElement = getDragAfterElement(list, e.clientY);
+          if (draggedElement && afterElement) {
+            list.insertBefore(draggedElement, afterElement);
+          }
+        });
+      }
     }
 
-    function copyPassword(password) {
-      navigator.clipboard.writeText(password).then(() => {
-        console.log('Password copied to clipboard');
+    function getDragAfterElement(container, y) {
+      const draggableElements = [
+        ...container.querySelectorAll('li:not(.dragging)'),
+      ];
+
+      return draggableElements.reduce(
+        (closest, child) => {
+          const box = child.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
+          if (offset < 0 && offset > closest.offset) {
+            return { offset, element: child };
+          } else {
+            return closest;
+          }
+        },
+        { offset: Number.NEGATIVE_INFINITY }
+      ).element;
+    }
+
+    async function deletePassword(id) {
+      const response = await fetch(`${baseUrl}/delete-password/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (response.ok) {
+        fetchPasswords();
+      } else {
+        alert('Failed to delete password');
+      }
+    }
+
+    async function editPassword(id, name, password) {
+      const newName = prompt('Edit Service Name', name);
+      const newPassword = prompt('Edit Password', password);
+
+      if (newName && newPassword) {
+        const response = await fetch(`${baseUrl}/edit-password/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ name: newName, password: newPassword }),
+        });
+
+        if (response.ok) {
+          fetchPasswords();
+        } else {
+          alert('Failed to edit password');
+        }
+      }
     }
 
     async function addPassword() {
-      const serviceName = document.getElementById('serviceName').value;
-      const servicePassword = document.getElementById('servicePassword').value;
+      const name = document.getElementById('serviceName').value;
+      const password = document.getElementById('servicePassword').value;
 
       const response = await fetch(`${baseUrl}/add-password`, {
         method: 'POST',
@@ -216,13 +300,13 @@
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: serviceName, password: servicePassword }),
+        body: JSON.stringify({ name, password }),
       });
 
       if (response.ok) {
         fetchPasswords();
       } else {
-        console.error('Failed to add password:', await response.text());
+        alert('Failed to add password');
       }
     }
 
