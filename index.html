@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Password Manager</title>
   <style>
-    /* General Styles */
     body {
       font-family: 'Arial', sans-serif;
       background-color: #f3f4f6;
@@ -86,6 +85,13 @@
     #logout:hover {
       background-color: #dc2626;
     }
+
+    @media (max-width: 600px) {
+      #container {
+        width: 100%;
+        border-radius: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -129,6 +135,8 @@
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
+      if (!validateInput(username, password)) return;
+
       try {
         const response = await fetch(`${baseUrl}/login`, {
           method: 'POST',
@@ -136,31 +144,23 @@
           body: JSON.stringify({ username, password }),
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Login failed:', errorText);
-          alert(`Error: ${response.status} - ${errorText}`);
-          return;
-        }
-
-        const data = await response.json();
-        console.log('Login response:', data);
-
-        if (data.token) {
+        if (response.ok) {
+          const data = await response.json();
           token = data.token;
           showDashboard();
         } else {
-          alert(data.message || 'Login failed');
+          alert(await response.text());
         }
       } catch (error) {
-        console.error('Error during login:', error);
-        alert('An error occurred. Please try again.');
+        alert('Error during login.');
       }
     }
 
     async function createAccount() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+
+      if (!validateInput(username, password)) return;
 
       try {
         const response = await fetch(`${baseUrl}/register`, {
@@ -169,19 +169,13 @@
           body: JSON.stringify({ username, password }),
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Account creation failed:', errorText);
-          alert(`Error: ${response.status} - ${errorText}`);
-          return;
+        if (response.ok) {
+          alert('Account created successfully.');
+        } else {
+          alert(await response.text());
         }
-
-        const data = await response.json();
-        console.log('Account creation response:', data);
-        alert(data.message || 'Account created successfully');
       } catch (error) {
-        console.error('Error during account creation:', error);
-        alert('An error occurred. Please try again.');
+        alert('Error creating account.');
       }
     }
 
@@ -190,19 +184,18 @@
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) {
-        console.error('Failed to fetch passwords:', await response.text());
-        return;
+      if (response.ok) {
+        const data = await response.json();
+        const list = document.getElementById('passwordList');
+        list.innerHTML = '';
+        data.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = `${item.name}: ${item.password}`;
+          list.appendChild(li);
+        });
+      } else {
+        alert('Failed to fetch passwords.');
       }
-
-      const data = await response.json();
-      const list = document.getElementById('passwordList');
-      list.innerHTML = '';
-      data.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = `${item.name}: ${item.password}`;
-        list.appendChild(li);
-      });
     }
 
     async function addPassword() {
@@ -221,13 +214,25 @@
       if (response.ok) {
         fetchPasswords();
       } else {
-        console.error('Failed to add password:', await response.text());
+        alert('Failed to add password.');
       }
     }
 
     function logout() {
       token = '';
       showAuth();
+    }
+
+    function validateInput(username, password) {
+      if (!username || !password) {
+        alert('Username and password are required.');
+        return false;
+      }
+      if (password.length < 8) {
+        alert('Password must be at least 8 characters.');
+        return false;
+      }
+      return true;
     }
   </script>
 </body>
