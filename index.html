@@ -106,7 +106,6 @@
       <input type="password" id="servicePassword" placeholder="Password">
       <button onclick="addPassword()">Add Password</button>
       <h2>Stored Passwords</h2>
-      <button onclick="fetchPasswords()">Fetch Passwords</button>
       <ul id="passwordList"></ul>
     </div>
   </div>
@@ -130,57 +129,24 @@
       const password = document.getElementById('password').value;
 
       try {
-        const response = await fetch(`${baseUrl}/login`, {  // <-- Corrected URL with backticks
+        const response = await fetch(`${baseUrl}/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
         });
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Login failed:', errorText);
-          alert(`Error: ${response.status} - ${errorText}`);
+          alert('Invalid credentials');
           return;
         }
 
         const data = await response.json();
-        console.log('Login response:', data);
+        token = data.token;
 
-        if (data.token) {
-          token = data.token;
-          showDashboard();
-        } else {
-          alert(data.message || 'Login failed');
-        }
+        showDashboard();
+        fetchPasswords();
       } catch (error) {
-        console.error('Error during login:', error);
-        alert('An error occurred. Please try again.');
-      }
-    }
-
-    async function createAccount() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      try {
-        const response = await fetch(`${baseUrl}/register`, {  // <-- Corrected URL with backticks
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Account creation failed:', errorText);
-          alert(`Error: ${response.status} - ${errorText}`);
-          return;
-        }
-
-        const data = await response.json();
-        console.log('Account creation response:', data);
-        alert(data.message || 'Account created successfully');
-      } catch (error) {
-        console.error('Error during account creation:', error);
+        console.error('Login error:', error);
         alert('An error occurred. Please try again.');
       }
     }
@@ -198,11 +164,88 @@
       const data = await response.json();
       const list = document.getElementById('passwordList');
       list.innerHTML = '';
-      data.forEach(item => {
+
+      data.forEach((item, index) => {
         const li = document.createElement('li');
-        li.textContent = `${item.name}: ${item.password}`;
+        li.innerHTML = `
+          <strong>${item.name}</strong>: ${item.password}
+          <button onclick="copyPassword('${item.password}')">Copy</button>
+          <button onclick="editPassword(${index}, '${item.name}')">Edit</button>
+          <button onclick="deletePassword(${index})">Delete</button>
+        `;
         list.appendChild(li);
       });
+    }
+
+    function copyPassword(password) {
+      navigator.clipboard.writeText(password).then(() => {
+        alert('Password copied to clipboard!');
+      });
+    }
+
+    async function editPassword(index, name) {
+      const newPassword = prompt(`Edit password for ${name}:`);
+      if (!newPassword) return;
+
+      const response = await fetch(`${baseUrl}/update-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ index, password: newPassword }),
+      });
+
+      if (response.ok) {
+        fetchPasswords();
+      } else {
+        console.error('Failed to update password:', await response.text());
+      }
+    }
+
+    async function deletePassword(index) {
+      const response = await fetch(`${baseUrl}/delete-password`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ index }),
+      });
+
+      if (response.ok) {
+        fetchPasswords();
+      } else {
+        console.error('Failed to delete password:', await response.text());
+      }
+    }
+
+    async function createAccount() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch(`${baseUrl}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!response.ok) {
+          alert('Account creation failed');
+          return;
+        }
+
+        const data = await response.json();
+        alert(data.message);
+      } catch (error) {
+        console.error('Error creating account:', error);
+      }
+    }
+
+    function logout() {
+      token = '';
+      showAuth();
     }
 
     async function addPassword() {
@@ -223,11 +266,6 @@
       } else {
         console.error('Failed to add password:', await response.text());
       }
-    }
-
-    function logout() {
-      token = '';
-      showAuth();
     }
   </script>
 </body>
