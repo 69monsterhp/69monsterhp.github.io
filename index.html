@@ -75,6 +75,10 @@
       padding: 10px;
       border-radius: 4px;
       border: 1px solid #e5e7eb;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     #logout {
@@ -87,13 +91,18 @@
       background-color: #dc2626;
     }
 
-    /* Styling for Show/Hide password button */
-    #togglePassword {
-      background: none;
-      color: #3b82f6;
-      border: none;
-      cursor: pointer;
+    /* Styling for buttons in the list */
+    .list-actions button {
+      background-color: #f97316;
+      color: white;
+      margin-left: 5px;
       font-size: 14px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .list-actions button:hover {
+      background-color: #ea580c;
     }
   </style>
 </head>
@@ -112,8 +121,7 @@
       <button id="logout" onclick="logout()">Logout</button>
       <h2>Add New Password</h2>
       <input type="text" id="serviceName" placeholder="Service Name">
-      <input type="password" id="servicePassword" placeholder="Password">
-      <button type="button" id="togglePassword" onclick="togglePasswordVisibility()">Show</button> <!-- Toggle Button -->
+      <input type="text" id="servicePassword" placeholder="Password">
       <button onclick="addPassword()">Add Password</button>
       <h2>Stored Passwords</h2>
       <ul id="passwordList"></ul>
@@ -122,7 +130,7 @@
 
   <script>
     let token = '';
-    let selectedIndex = null;
+    let selectedPasswordIndex = null;
     const baseUrl = 'http://localhost:5000';
 
     function showDashboard() {
@@ -188,16 +196,17 @@
         li.classList.add('password-item');
         li.textContent = `${item.name}: ${item.password}`;
         li.onclick = () => selectPassword(index);  // Attach click event to each item
+        const actions = document.createElement('div');
+        actions.classList.add('list-actions');
+        actions.innerHTML = `
+          <button onclick="copyPassword(${index})">Copy</button>
+          <button onclick="editPassword(${index})">Edit</button>
+          <button onclick="deletePassword(${index})">Delete</button>
+        `;
+        li.appendChild(actions);
         list.appendChild(li);
       });
     }
-
-    // Trigger login on 'Enter' key press
-    document.getElementById('password').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        login();
-      }
-    });
 
     async function addPassword() {
       const serviceName = document.getElementById('serviceName').value;
@@ -224,17 +233,34 @@
       showAuth();
     }
 
-    // Function to toggle password visibility
-    function togglePasswordVisibility() {
-      const passwordField = document.getElementById('servicePassword');
-      const toggleButton = document.getElementById('togglePassword');
+    // Copy password to clipboard
+    function copyPassword(index) {
+      const passwordItem = document.getElementById('passwordList').children[index];
+      const password = passwordItem.textContent.split(": ")[1];
+      navigator.clipboard.writeText(password).then(() => {
+        console.log('Password copied to clipboard');
+      });
+    }
 
-      if (passwordField.type === "password") {
-        passwordField.type = "text"; // Make password visible
-        toggleButton.textContent = "Hide"; // Change button text to "Hide"
-      } else {
-        passwordField.type = "password"; // Hide password
-        toggleButton.textContent = "Show"; // Change button text to "Show"
+    // Edit password
+    function editPassword(index) {
+      const passwordItem = document.getElementById('passwordList').children[index];
+      const password = passwordItem.textContent.split(": ")[1];
+      const newPassword = prompt("Edit Password:", password);
+      if (newPassword) {
+        // Here we would send the update request to the backend
+        console.log(`Password updated: ${newPassword}`);
+      }
+    }
+
+    // Delete password
+    function deletePassword(index) {
+      const passwordItem = document.getElementById('passwordList').children[index];
+      const password = passwordItem.textContent.split(": ")[1];
+      const confirmDelete = confirm(`Are you sure you want to delete the password for ${passwordItem.textContent.split(": ")[0]}?`);
+      if (confirmDelete) {
+        // Here we would send the delete request to the backend
+        console.log(`Password deleted: ${password}`);
       }
     }
 
