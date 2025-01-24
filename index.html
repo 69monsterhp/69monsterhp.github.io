@@ -75,11 +75,6 @@
       padding: 10px;
       border-radius: 4px;
       border: 1px solid #e5e7eb;
-      cursor: pointer;
-    }
-
-    li.selected {
-      background-color: #e2e8f0;
     }
 
     #logout {
@@ -90,6 +85,15 @@
 
     #logout:hover {
       background-color: #dc2626;
+    }
+
+    /* Styling for Show/Hide password button */
+    #togglePassword {
+      background: none;
+      color: #3b82f6;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -109,6 +113,7 @@
       <h2>Add New Password</h2>
       <input type="text" id="serviceName" placeholder="Service Name">
       <input type="password" id="servicePassword" placeholder="Password">
+      <button type="button" id="togglePassword" onclick="togglePasswordVisibility()">Show</button> <!-- Toggle Button -->
       <button onclick="addPassword()">Add Password</button>
       <h2>Stored Passwords</h2>
       <ul id="passwordList"></ul>
@@ -194,6 +199,44 @@
       }
     });
 
-</script>
+    async function addPassword() {
+      const serviceName = document.getElementById('serviceName').value;
+      const password = document.getElementById('servicePassword').value;
+
+      const response = await fetch(`${baseUrl}/add-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: serviceName, password }),
+      });
+
+      if (response.ok) {
+        fetchPasswords();
+      } else {
+        console.error('Failed to add password:', await response.text());
+      }
+    }
+
+    function logout() {
+      token = '';
+      showAuth();
+    }
+
+    // Function to toggle password visibility
+    function togglePasswordVisibility() {
+      const passwordField = document.getElementById('servicePassword');
+      const toggleButton = document.getElementById('togglePassword');
+
+      if (passwordField.type === "password") {
+        passwordField.type = "text"; // Make password visible
+        toggleButton.textContent = "Hide"; // Change button text to "Hide"
+      } else {
+        passwordField.type = "password"; // Hide password
+        toggleButton.textContent = "Show"; // Change button text to "Show"
+      }
+    }
+  </script>
 </body>
 </html>
