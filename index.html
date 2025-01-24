@@ -90,20 +90,6 @@
     #logout:hover {
       background-color: #dc2626;
     }
-
-    /* Styling for buttons in the list */
-    .list-actions button {
-      background-color: #f97316;
-      color: white;
-      margin-left: 5px;
-      font-size: 14px;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-
-    .list-actions button:hover {
-      background-color: #ea580c;
-    }
   </style>
 </head>
 <body>
@@ -130,7 +116,6 @@
 
   <script>
     let token = '';
-    let selectedPasswordIndex = null;
     const baseUrl = 'http://localhost:5000';
 
     function showDashboard() {
@@ -162,8 +147,6 @@
         }
 
         const data = await response.json();
-        console.log('Login response:', data);
-
         if (data.token) {
           token = data.token;
           showDashboard();
@@ -195,15 +178,7 @@
         const li = document.createElement('li');
         li.classList.add('password-item');
         li.textContent = `${item.name}: ${item.password}`;
-        li.onclick = () => selectPassword(index);  // Attach click event to each item
-        const actions = document.createElement('div');
-        actions.classList.add('list-actions');
-        actions.innerHTML = `
-          <button onclick="copyPassword(${index})">Copy</button>
-          <button onclick="editPassword(${index})">Edit</button>
-          <button onclick="deletePassword(${index})">Delete</button>
-        `;
-        li.appendChild(actions);
+        li.onclick = () => copyPassword(index);  // Copy password on click
         list.appendChild(li);
       });
     }
@@ -222,7 +197,7 @@
       });
 
       if (response.ok) {
-        fetchPasswords();
+        fetchPasswords(); // Refresh the list
       } else {
         console.error('Failed to add password:', await response.text());
       }
@@ -233,35 +208,13 @@
       showAuth();
     }
 
-    // Copy password to clipboard
+    // Copy password to clipboard when highlighted
     function copyPassword(index) {
       const passwordItem = document.getElementById('passwordList').children[index];
       const password = passwordItem.textContent.split(": ")[1];
       navigator.clipboard.writeText(password).then(() => {
         console.log('Password copied to clipboard');
       });
-    }
-
-    // Edit password
-    function editPassword(index) {
-      const passwordItem = document.getElementById('passwordList').children[index];
-      const password = passwordItem.textContent.split(": ")[1];
-      const newPassword = prompt("Edit Password:", password);
-      if (newPassword) {
-        // Here we would send the update request to the backend
-        console.log(`Password updated: ${newPassword}`);
-      }
-    }
-
-    // Delete password
-    function deletePassword(index) {
-      const passwordItem = document.getElementById('passwordList').children[index];
-      const password = passwordItem.textContent.split(": ")[1];
-      const confirmDelete = confirm(`Are you sure you want to delete the password for ${passwordItem.textContent.split(": ")[0]}?`);
-      if (confirmDelete) {
-        // Here we would send the delete request to the backend
-        console.log(`Password deleted: ${password}`);
-      }
     }
 
     // Function for account creation
@@ -284,7 +237,6 @@
         }
 
         const data = await response.json();
-        console.log('Account creation response:', data);
         alert(data.message || 'Account created successfully');
       } catch (error) {
         console.error('Error during account creation:', error);
