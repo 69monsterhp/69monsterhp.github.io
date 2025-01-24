@@ -154,38 +154,12 @@
         if (data.token) {
           token = data.token;
           showDashboard();
+          fetchPasswords(); // Fetch and display passwords after login
         } else {
           alert(data.message || 'Login failed');
         }
       } catch (error) {
         console.error('Error during login:', error);
-        alert('An error occurred. Please try again.');
-      }
-    }
-
-    async function createAccount() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      try {
-        const response = await fetch(`${baseUrl}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Account creation failed:', errorText);
-          alert(`Error: ${response.status} - ${errorText}`);
-          return;
-        }
-
-        const data = await response.json();
-        console.log('Account creation response:', data);
-        alert(data.message || 'Account created successfully');
-      } catch (error) {
-        console.error('Error during account creation:', error);
         alert('An error occurred. Please try again.');
       }
     }
@@ -213,47 +187,6 @@
       });
     }
 
-    async function addPassword() {
-      const serviceName = document.getElementById('serviceName').value;
-      const password = document.getElementById('servicePassword').value;
-
-      const response = await fetch(`${baseUrl}/add-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: serviceName, password }),
-      });
-
-      if (response.ok) {
-        fetchPasswords();
-      } else {
-        console.error('Failed to add password:', await response.text());
-      }
-    }
-
-    function selectPassword(index) {
-      const listItems = document.querySelectorAll('.password-item');
-      listItems.forEach((item, i) => {
-        item.classList.toggle('selected', i === index);
-      });
-      selectedIndex = index;
-
-      // Get the password text and remove extra whitespace
-      const passwordText = listItems[index].textContent.split(': ')[1].trim();
-      
-      // Copy the password to clipboard
-      navigator.clipboard.writeText(passwordText).then(() => {
-        console.log('Password copied!');
-      });
-    }
-
-    function logout() {
-      token = '';
-      showAuth();
-    }
-
     // Trigger login on 'Enter' key press
     document.getElementById('password').addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
@@ -261,6 +194,6 @@
       }
     });
 
-  </script>
+</script>
 </body>
 </html>
