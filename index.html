@@ -130,7 +130,7 @@
       const password = document.getElementById('password').value;
 
       try {
-        const response = await fetch(${baseUrl}/login, {
+        const response = await fetch(`${baseUrl}/login`, {  // <-- Corrected URL with backticks
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
@@ -139,7 +139,7 @@
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Login failed:', errorText);
-          alert(Error: ${response.status} - ${errorText});
+          alert(`Error: ${response.status} - ${errorText}`);
           return;
         }
 
@@ -163,7 +163,7 @@
       const password = document.getElementById('password').value;
 
       try {
-        const response = await fetch(${baseUrl}/register, {
+        const response = await fetch(`${baseUrl}/register`, {  // <-- Corrected URL with backticks
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
@@ -172,7 +172,7 @@
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Account creation failed:', errorText);
-          alert(Error: ${response.status} - ${errorText});
+          alert(`Error: ${response.status} - ${errorText}`);
           return;
         }
 
@@ -186,8 +186,8 @@
     }
 
     async function fetchPasswords() {
-      const response = await fetch(${baseUrl}/get-passwords, {
-        headers: { Authorization: Bearer ${token} },
+      const response = await fetch(`${baseUrl}/get-passwords`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
@@ -200,7 +200,7 @@
       list.innerHTML = '';
       data.forEach(item => {
         const li = document.createElement('li');
-        li.textContent = ${item.name}: ${item.password};
+        li.textContent = `${item.name}: ${item.password}`;
         list.appendChild(li);
       });
     }
@@ -209,11 +209,11 @@
       const serviceName = document.getElementById('serviceName').value;
       const password = document.getElementById('servicePassword').value;
 
-      const response = await fetch(${baseUrl}/add-password, {
+      const response = await fetch(`${baseUrl}/add-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: Bearer ${token},
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ name: serviceName, password }),
       });
