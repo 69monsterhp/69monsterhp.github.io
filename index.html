@@ -94,8 +94,8 @@
       <h1>Password Manager</h1>
       <input type="text" id="username" placeholder="Username">
       <input type="password" id="password" placeholder="Password">
-      <button onclick="login()">Login</button>
-      <button onclick="createAccount()">Create Account</button>
+      <button id="loginBtn">Login</button>
+      <button id="createAccountBtn">Create Account</button>
     </div>
 
     <div id="dashboard">
@@ -225,6 +225,10 @@
       token = '';
       showAuth();
     }
+
+    // Ensure the buttons have event listeners for login and account creation
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('createAccountBtn').addEventListener('click', createAccount);
   </script>
 </body>
 </html>
