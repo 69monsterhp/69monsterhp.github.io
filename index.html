@@ -1,174 +1,311 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Manager</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Manager</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
+    #container {
+      background: white;
+      width: 90%;
+      max-width: 400px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
 
-        input, button {
-            width: 100%;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
+    h1 {
+      color: #374151;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
 
-        button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-        }
+    input, button {
+      width: calc(100% - 20px);
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      outline: none;
+    }
 
-        button:hover {
-            background-color: #0056b3;
-        }
+    input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    }
 
-        .password-list {
-            margin-top: 20px;
-        }
+    button {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
 
-        .password-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            border-bottom: 1px solid #ccc;
-        }
+    button:hover {
+      background-color: #2563eb;
+    }
 
-        .password-item button {
-            width: auto;
-            margin-left: 10px;
-        }
-    </style>
+    #dashboard {
+      display: none;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: #f9fafb;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+      position: relative;
+    }
+
+    li button {
+      margin-left: 5px;
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    li button:nth-of-type(1) {
+      background-color: #10b981; /* Green for Copy */
+    }
+
+    li button:nth-of-type(2) {
+      background-color: #facc15; /* Yellow for Edit */
+    }
+
+    li button:nth-of-type(3) {
+      background-color: #ef4444; /* Red for Delete */
+    }
+
+    li button:hover {
+      opacity: 0.8;
+    }
+
+    #logout {
+      margin-top: 20px;
+      background-color: #ef4444;
+      border: none;
+    }
+
+    #logout:hover {
+      background-color: #dc2626;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Password Manager</h1>
-
-        <div id="auth-section">
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
-            <button onclick="register()">Register</button>
-            <button onclick="login()">Login</button>
-        </div>
-
-        <div id="password-section" style="display: none;">
-            <h2>Saved Passwords</h2>
-            <input type="text" id="serviceName" placeholder="Service Name">
-            <input type="text" id="servicePassword" placeholder="Service Password">
-            <button onclick="addPassword()">Add Password</button>
-
-            <div class="password-list" id="password-list"></div>
-        </div>
+  <div id="container">
+    <div id="auth">
+      <h1>Password Manager</h1>
+      <input type="text" id="username" placeholder="Username">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+      <button onclick="createAccount()">Create Account</button>
     </div>
 
-    <script>
-        const baseUrl = 'http://127.0.0.1:5000';
-        let token = null;
+    <div id="dashboard">
+      <h1>Welcome</h1>
+      <button id="logout" onclick="logout()">Logout</button>
+      <h2>Add New Password</h2>
+      <input type="text" id="serviceName" placeholder="Service Name">
+      <input type="password" id="servicePassword" placeholder="Password">
+      <button onclick="addPassword()">Add Password</button>
+      <h2>Stored Passwords</h2>
+      <button onclick="fetchPasswords()">Fetch Passwords</button>
+      <ul id="passwordList"></ul>
+    </div>
+  </div>
 
-        function register() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+  <script>
+    let token = '';
+    const baseUrl = 'http://localhost:5000';
 
-            fetch(`${baseUrl}/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
-            })
-            .then(response => response.json())
-            .then(data => alert(data.msg))
-            .catch(console.error);
+    function showDashboard() {
+      document.getElementById('auth').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+    }
+
+    function showAuth() {
+      document.getElementById('auth').style.display = 'block';
+      document.getElementById('dashboard').style.display = 'none';
+    }
+
+    async function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch(`${baseUrl}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Login failed:', errorText);
+          alert(`Error: ${response.status} - ${errorText}`);
+          return;
         }
 
-        function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+        const data = await response.json();
+        console.log('Login response:', data);
 
-            fetch(`${baseUrl}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.token) {
-                    token = data.token;
-                    document.getElementById('auth-section').style.display = 'none';
-                    document.getElementById('password-section').style.display = 'block';
-                    fetchPasswords();
-                }
-            })
-            .catch(console.error);
+        if (data.token) {
+          token = data.token;
+          showDashboard();
+        } else {
+          alert(data.message || 'Login failed');
+        }
+      } catch (error) {
+        console.error('Error during login:', error);
+        alert('An error occurred. Please try again.');
+      }
+    }
+
+    async function createAccount() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch(`${baseUrl}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Account creation failed:', errorText);
+          alert(`Error: ${response.status} - ${errorText}`);
+          return;
         }
 
-        function addPassword() {
-            const serviceName = document.getElementById('serviceName').value;
-            const servicePassword = document.getElementById('servicePassword').value;
+        const data = await response.json();
+        console.log('Account creation response:', data);
+        alert(data.message || 'Account created successfully');
+      } catch (error) {
+        console.error('Error during account creation:', error);
+        alert('An error occurred. Please try again.');
+      }
+    }
 
-            fetch(`${baseUrl}/add-password`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name: serviceName, password: servicePassword }),
-            })
-            .then(response => response.json())
-            .then(() => fetchPasswords())
-            .catch(console.error);
-        }
+    function renderPasswords(passwords) {
+      const list = document.getElementById('passwordList');
+      list.innerHTML = '';
+      passwords.forEach(({ id, name, password }) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <strong>${name}</strong>: ${password}
+          <button onclick="copyToClipboard('${password}')">Copy</button>
+          <button onclick="editPassword(${id}, '${name}', '${password}')">Edit</button>
+          <button onclick="deletePassword(${id})">Delete</button>
+        `;
+        list.appendChild(li);
+      });
+    }
 
-        function fetchPasswords() {
-            fetch(`${baseUrl}/get-passwords`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-            .then(response => response.json())
-            .then(passwords => {
-                const list = document.getElementById('password-list');
-                list.innerHTML = '';
-                passwords.forEach(password => {
-                    const item = document.createElement('div');
-                    item.className = 'password-item';
-                    item.innerHTML = `
-                        ${password.name}: ${password.password}
-                        <button onclick="deletePassword(${password.id})">Delete</button>
-                    `;
-                    list.appendChild(item);
-                });
-            })
-            .catch(console.error);
-        }
+    async function fetchPasswords() {
+      const response = await fetch(`${baseUrl}/get-passwords`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-        function deletePassword(id) {
-            fetch(`${baseUrl}/delete-password/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-            .then(() => fetchPasswords())
-            .catch(console.error);
-        }
-    </script>
+      if (response.ok) {
+        const passwords = await response.json();
+        renderPasswords(passwords);
+      } else {
+        console.error('Failed to fetch passwords:', await response.text());
+      }
+    }
+
+    async function deletePassword(id) {
+      const response = await fetch(`${baseUrl}/delete-password/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        fetchPasswords();
+      } else {
+        console.error('Failed to delete password:', await response.text());
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Password copied to clipboard!');
+      });
+    }
+
+    function editPassword(id, currentName, currentPassword) {
+      const newName = prompt('Enter new service name:', currentName);
+      const newPassword = prompt('Enter new password:', currentPassword);
+
+      if (newName || newPassword) {
+        const payload = {};
+        if (newName) payload.name = newName;
+        if (newPassword) payload.password = newPassword;
+
+        fetch(`${baseUrl}/edit-password/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }).then(response => {
+          if (response.ok) {
+            fetchPasswords();
+          } else {
+            console.error('Failed to edit password:', response.text());
+          }
+        });
+      }
+    }
+
+    async function addPassword() {
+      const serviceName = document.getElementById('serviceName').value;
+      const password = document.getElementById('servicePassword').value;
+
+      const response = await fetch(`${baseUrl}/add-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: serviceName, password }),
+      });
+
+      if (response.ok) {
+        fetchPasswords();
+      } else {
+        console.error('Failed to add password:', await response.text());
+      }
+    }
+
+    function logout() {
+      token = '';
+      showAuth();
+    }
+  </script>
 </body>
 </html>
