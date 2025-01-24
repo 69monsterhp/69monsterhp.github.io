@@ -100,7 +100,7 @@
     <div id="auth">
       <h1>Password Manager</h1>
       <input type="text" id="username" placeholder="Username">
-      <input type="password" id="password" placeholder="Password">
+      <input type="password" id="password" placeholder="Password" onkeypress="checkEnter(event)">
       <button onclick="login()">Login</button>
       <button onclick="createAccount()">Create Account</button>
     </div>
@@ -135,6 +135,12 @@
     function showAuth() {
       document.getElementById('auth').style.display = 'block';
       document.getElementById('dashboard').style.display = 'none';
+    }
+
+    function checkEnter(event) {
+      if (event.key === 'Enter') {
+        login();
+      }
     }
 
     async function login() {
@@ -195,9 +201,12 @@
         item.classList.toggle('selected', i === index);
       });
       selectedIndex = index;
+
+      const passwordText = listItems[index].textContent.split(': ')[1];
+      navigator.clipboard.writeText(passwordText); // Copy to clipboard automatically
     }
 
-    function copyPassword() {
+    async function copyPassword() {
       if (selectedIndex === null) {
         alert('Select a password first.');
         return;
@@ -207,7 +216,7 @@
       const passwordText = selectedPassword.textContent.split(': ')[1];
 
       navigator.clipboard.writeText(passwordText).then(() => {
-        alert('Password copied to clipboard!');
+        console.log('Password copied!');
       });
     }
 
