@@ -237,6 +237,34 @@
         toggleButton.textContent = "Show"; // Change button text to "Show"
       }
     }
+
+    // Function for account creation
+    async function createAccount() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch(`${baseUrl}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Account creation failed:', errorText);
+          alert(`Error: ${response.status} - ${errorText}`);
+          return;
+        }
+
+        const data = await response.json();
+        console.log('Account creation response:', data);
+        alert(data.message || 'Account created successfully');
+      } catch (error) {
+        console.error('Error during account creation:', error);
+        alert('An error occurred. Please try again.');
+      }
+    }
   </script>
 </body>
 </html>
