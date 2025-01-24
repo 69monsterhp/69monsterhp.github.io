@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Password Manager</title>
   <style>
+    /* General Styles */
     body {
       font-family: 'Arial', sans-serif;
       background-color: #f3f4f6;
@@ -19,10 +20,11 @@
     #container {
       background: white;
       width: 90%;
-      max-width: 500px;
+      max-width: 400px;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
     }
 
     h1 {
@@ -62,36 +64,32 @@
       display: none;
     }
 
-    #passwordList {
-      margin: 20px 0;
-      padding: 0;
+    ul {
       list-style: none;
+      padding: 0;
     }
 
-    .password-item {
-      padding: 10px;
-      border: 1px solid #e5e7eb;
-      border-radius: 4px;
+    li {
+      background: #f9fafb;
       margin: 5px 0;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
       cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
-    .password-item.selected {
-      background-color: #3b82f6;
-      color: white;
+    li.selected {
+      background-color: #e2e8f0;
     }
 
-    #actions {
-      display: flex;
-      justify-content: space-between;
+    #logout {
       margin-top: 20px;
+      background-color: #ef4444;
+      border: none;
     }
 
-    #actions button {
-      width: 30%;
+    #logout:hover {
+      background-color: #dc2626;
     }
   </style>
 </head>
@@ -100,7 +98,7 @@
     <div id="auth">
       <h1>Password Manager</h1>
       <input type="text" id="username" placeholder="Username">
-      <input type="password" id="password" placeholder="Password" onkeypress="checkEnter(event)">
+      <input type="password" id="password" placeholder="Password">
       <button onclick="login()">Login</button>
       <button onclick="createAccount()">Create Account</button>
     </div>
@@ -114,18 +112,13 @@
       <button onclick="addPassword()">Add Password</button>
       <h2>Stored Passwords</h2>
       <ul id="passwordList"></ul>
-      <div id="actions">
-        <button onclick="copyPassword()">Copy</button>
-        <button onclick="editPassword()">Edit</button>
-        <button onclick="deletePassword()">Delete</button>
-      </div>
     </div>
   </div>
 
   <script>
     let token = '';
-    const baseUrl = 'http://localhost:5000';
     let selectedIndex = null;
+    const baseUrl = 'http://localhost:5000';
 
     function showDashboard() {
       document.getElementById('auth').style.display = 'none';
@@ -135,12 +128,6 @@
     function showAuth() {
       document.getElementById('auth').style.display = 'block';
       document.getElementById('dashboard').style.display = 'none';
-    }
-
-    function checkEnter(event) {
-      if (event.key === 'Enter') {
-        login();
-      }
     }
 
     async function login() {
@@ -155,17 +142,50 @@
         });
 
         if (!response.ok) {
-          alert('Invalid credentials');
+          const errorText = await response.text();
+          console.error('Login failed:', errorText);
+          alert(`Error: ${response.status} - ${errorText}`);
           return;
         }
 
         const data = await response.json();
-        token = data.token;
+        console.log('Login response:', data);
 
-        showDashboard();
-        fetchPasswords();
+        if (data.token) {
+          token = data.token;
+          showDashboard();
+        } else {
+          alert(data.message || 'Login failed');
+        }
       } catch (error) {
-        console.error('Login error:', error);
+        console.error('Error during login:', error);
+        alert('An error occurred. Please try again.');
+      }
+    }
+
+    async function createAccount() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch(`${baseUrl}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Account creation failed:', errorText);
+          alert(`Error: ${response.status} - ${errorText}`);
+          return;
+        }
+
+        const data = await response.json();
+        console.log('Account creation response:', data);
+        alert(data.message || 'Account created successfully');
+      } catch (error) {
+        console.error('Error during account creation:', error);
         alert('An error occurred. Please try again.');
       }
     }
@@ -186,114 +206,11 @@
 
       data.forEach((item, index) => {
         const li = document.createElement('li');
-        li.className = 'password-item';
-        li.innerHTML = `
-          <span><strong>${item.name}</strong>: ${item.password}</span>
-        `;
-        li.onclick = () => selectPassword(index);
+        li.classList.add('password-item');
+        li.textContent = `${item.name}: ${item.password}`;
+        li.onclick = () => selectPassword(index);  // Attach click event to each item
         list.appendChild(li);
       });
-    }
-
-    function selectPassword(index) {
-      const listItems = document.querySelectorAll('.password-item');
-      listItems.forEach((item, i) => {
-        item.classList.toggle('selected', i === index);
-      });
-      selectedIndex = index;
-
-      const passwordText = listItems[index].textContent.split(': ')[1];
-      navigator.clipboard.writeText(passwordText); // Copy to clipboard automatically
-    }
-
-    async function copyPassword() {
-      if (selectedIndex === null) {
-        alert('Select a password first.');
-        return;
-      }
-
-      const selectedPassword = document.querySelectorAll('.password-item')[selectedIndex];
-      const passwordText = selectedPassword.textContent.split(': ')[1];
-
-      navigator.clipboard.writeText(passwordText).then(() => {
-        console.log('Password copied!');
-      });
-    }
-
-    async function editPassword() {
-      if (selectedIndex === null) {
-        alert('Select a password first.');
-        return;
-      }
-
-      const newPassword = prompt('Enter the new password:');
-      if (!newPassword) return;
-
-      const response = await fetch(`${baseUrl}/update-password`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ index: selectedIndex, password: newPassword }),
-      });
-
-      if (response.ok) {
-        fetchPasswords();
-      } else {
-        console.error('Failed to update password:', await response.text());
-      }
-    }
-
-    async function deletePassword() {
-      if (selectedIndex === null) {
-        alert('Select a password first.');
-        return;
-      }
-
-      const response = await fetch(`${baseUrl}/delete-password`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ index: selectedIndex }),
-      });
-
-      if (response.ok) {
-        fetchPasswords();
-      } else {
-        console.error('Failed to delete password:', await response.text());
-      }
-    }
-
-    async function createAccount() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      try {
-        const response = await fetch(`${baseUrl}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
-
-        if (!response.ok) {
-          alert('Account creation failed');
-          return;
-        }
-
-        const data = await response.json();
-        alert(data.message);
-      } catch (error) {
-        console.error('Error creating account:', error);
-      }
-    }
-
-    function logout() {
-      token = '';
-      selectedIndex = null;
-      showAuth();
     }
 
     async function addPassword() {
@@ -315,6 +232,35 @@
         console.error('Failed to add password:', await response.text());
       }
     }
+
+    function selectPassword(index) {
+      const listItems = document.querySelectorAll('.password-item');
+      listItems.forEach((item, i) => {
+        item.classList.toggle('selected', i === index);
+      });
+      selectedIndex = index;
+
+      // Get the password text and remove extra whitespace
+      const passwordText = listItems[index].textContent.split(': ')[1].trim();
+      
+      // Copy the password to clipboard
+      navigator.clipboard.writeText(passwordText).then(() => {
+        console.log('Password copied!');
+      });
+    }
+
+    function logout() {
+      token = '';
+      showAuth();
+    }
+
+    // Trigger login on 'Enter' key press
+    document.getElementById('password').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        login();
+      }
+    });
+
   </script>
 </body>
 </html>
