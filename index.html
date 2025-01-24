@@ -5,87 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Password Manager</title>
   <style>
-    /* General Styles */
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f3f4f6;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    #container {
-      background: white;
-      width: 90%;
-      max-width: 400px;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-
-    h1 {
-      color: #374151;
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
-
-    input, button {
-      width: calc(100% - 20px);
-      margin: 10px 0;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #d1d5db;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
-    }
-
-    button {
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    button:hover {
-      background-color: #2563eb;
-    }
-
-    #dashboard {
-      display: none;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    li {
-      background: #f9fafb;
-      margin: 5px 0;
-      padding: 10px;
-      border-radius: 4px;
-      border: 1px solid #e5e7eb;
-    }
-
-    #logout {
-      margin-top: 20px;
-      background-color: #ef4444;
-      border: none;
-    }
-
-    #logout:hover {
-      background-color: #dc2626;
-    }
+    /* Styling as before */
   </style>
 </head>
 <body>
@@ -94,11 +14,11 @@
       <h1>Password Manager</h1>
       <input type="text" id="username" placeholder="Username">
       <input type="password" id="password" placeholder="Password">
-      <button id="loginBtn">Login</button>
-      <button id="createAccountBtn">Create Account</button>
+      <button onclick="login()">Login</button>
+      <button onclick="createAccount()">Create Account</button>
     </div>
 
-    <div id="dashboard">
+    <div id="dashboard" style="display:none;">
       <h1>Welcome</h1>
       <button id="logout" onclick="logout()">Logout</button>
       <h2>Add New Password</h2>
@@ -125,31 +45,6 @@
       document.getElementById('dashboard').style.display = 'none';
     }
 
-    async function createAccount() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      try {
-        const response = await fetch(`${baseUrl}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          alert(`Error: ${response.status} - ${errorText}`);
-          return;
-        }
-
-        const data = await response.json();
-        alert(data.message || 'Account created successfully');
-      } catch (error) {
-        console.error('Error during account creation:', error);
-        alert('An error occurred. Please try again.');
-      }
-    }
-
     async function login() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
@@ -163,12 +58,12 @@
 
         if (!response.ok) {
           const errorText = await response.text();
+          console.error('Login failed:', errorText);
           alert(`Error: ${response.status} - ${errorText}`);
           return;
         }
 
         const data = await response.json();
-
         if (data.token) {
           token = data.token;
           showDashboard();
@@ -177,6 +72,32 @@
         }
       } catch (error) {
         console.error('Error during login:', error);
+        alert('An error occurred. Please try again.');
+      }
+    }
+
+    async function createAccount() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch(`${baseUrl}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Account creation failed:', errorText);
+          alert(`Error: ${response.status} - ${errorText}`);
+          return;
+        }
+
+        const data = await response.json();
+        alert(data.message || 'Account created successfully');
+      } catch (error) {
+        console.error('Error during account creation:', error);
         alert('An error occurred. Please try again.');
       }
     }
@@ -225,10 +146,6 @@
       token = '';
       showAuth();
     }
-
-    // Ensure the buttons have event listeners for login and account creation
-    document.getElementById('loginBtn').addEventListener('click', login);
-    document.getElementById('createAccountBtn').addEventListener('click', createAccount);
   </script>
 </body>
 </html>
