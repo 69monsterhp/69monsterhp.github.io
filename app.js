@@ -1,36 +1,41 @@
-const API_URL = 'http://your-tor-hidden-service.onion'; // Replace with your hidden service URL
+async function register(username, email, password) {
+    try {
+        const response = await fetch("http://localhost:5000/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, email, password })
+        });
 
-document.getElementById('login').addEventListener('click', async () => {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-    });
-
-    if (response.ok) {
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('manager').style.display = 'block';
-    } else {
-        alert('Login failed!');
+        const data = await response.json();
+        if (response.ok) {
+            console.log("Account created successfully:", data);
+        } else {
+            console.error("Failed to create account:", data.error);
+        }
+    } catch (error) {
+        console.error("Network error:", error);
     }
-});
+}
 
-document.getElementById('save').addEventListener('click', async () => {
-    const site = document.getElementById('site').value;
-    const password = document.getElementById('password-store').value;
+async function login(username, password) {
+    try {
+        const response = await fetch("http://localhost:5000/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
 
-    const response = await fetch(`${API_URL}/passwords`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ site, password }),
-    });
-
-    if (response.ok) {
-        alert('Password saved!');
-    } else {
-        alert('Failed to save password.');
+        const data = await response.json();
+        if (response.ok) {
+            console.log("Login successful:", data);
+        } else {
+            console.error("Login failed:", data.error);
+        }
+    } catch (error) {
+        console.error("Network error:", error);
     }
-});
+}
+
+// Example usage
+// register("testuser", "test@example.com", "mypassword123");
+// login("testuser", "mypassword123");
