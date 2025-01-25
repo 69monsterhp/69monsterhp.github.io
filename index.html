@@ -1,319 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Password Manager</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f3f4f6;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    #container {
-      background: white;
-      width: 90%;
-      max-width: 500px;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-
-    h1 {
-      color: #374151;
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
-
-    input, button {
-      width: calc(100% - 20px);
-      margin: 10px 0;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #d1d5db;
-      outline: none;
-    }
-
-    button {
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #2563eb;
-    }
-
-    #dashboard {
-      display: none;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    li {
-      background: #f9fafb;
-      margin: 5px 0;
-      padding: 10px;
-      border-radius: 4px;
-      border: 1px solid #e5e7eb;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: grab;
-    }
-
-    li.dragging {
-      opacity: 0.5;
-    }
-
-    .actions {
-      display: flex;
-      gap: 5px;
-    }
-
-    .actions button {
-      font-size: 14px;
-      padding: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Manager</title>
+    <script src="app.js" defer></script>
 </head>
 <body>
-  <div id="container">
-    <div id="auth">
-      <h1>Password Manager</h1>
-      <input type="text" id="username" placeholder="Username" onkeydown="handleKeyDown(event)">
-      <input type="password" id="password" placeholder="Password" onkeydown="handleKeyDown(event)">
-      <button onclick="login()">Login</button>
-      <button onclick="createAccount()">Create Account</button>
+    <h1>Password Manager</h1>
+    <div>
+        <h2>Register</h2>
+        <form id="registerForm">
+            <input type="text" id="regUsername" placeholder="Username" required>
+            <input type="email" id="regEmail" placeholder="Email" required>
+            <input type="password" id="regPassword" placeholder="Password" required>
+            <button type="submit">Register</button>
+        </form>
+    </div>
+    <div>
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input type="text" id="loginUsername" placeholder="Username" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
     </div>
 
-    <div id="dashboard">
-      <h1>Welcome</h1>
-      <button id="logout" onclick="logout()">Logout</button>
-      <h2>Add New Password</h2>
-      <input type="text" id="serviceName" placeholder="Service Name">
-      <input type="text" id="servicePassword" placeholder="Password">
-      <button onclick="addPassword()">Add Password</button>
-      <h2>Stored Passwords</h2>
-      <ul id="passwordList"></ul>
-    </div>
-  </div>
-
-  <script>
-    let token = '';
-    const baseUrl = 'http://localhost:5000';
-    let draggedElement = null;
-
-    function showDashboard() {
-      document.getElementById('auth').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      fetchPasswords();
-    }
-
-    function showAuth() {
-      document.getElementById('auth').style.display = 'block';
-      document.getElementById('dashboard').style.display = 'none';
-    }
-
-    function handleKeyDown(event) {
-      if (event.key === 'Enter') {
-        login();
-      }
-    }
-
-    async function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      try {
-        const response = await fetch(`${baseUrl}/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            await register(username, email, password);
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          token = data.token;
-          showDashboard();
-        } else {
-          alert('Login failed');
-        }
-      } catch (error) {
-        console.error('Login error:', error);
-      }
-    }
-
-    async function createAccount() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      try {
-        const response = await fetch(`${baseUrl}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            await login(username, password);
         });
-
-        if (response.ok) {
-          alert('Account created successfully');
-        } else {
-          alert('Failed to create account');
-        }
-      } catch (error) {
-        console.error('Error creating account:', error);
-      }
-    }
-
-    async function fetchPasswords() {
-      const response = await fetch(`${baseUrl}/get-passwords`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const list = document.getElementById('passwordList');
-        list.innerHTML = '';
-        data.forEach((item, index) => {
-          const li = document.createElement('li');
-          li.setAttribute('draggable', true);
-          li.dataset.id = item.id;
-          li.textContent = `${index + 1}. ${item.name}: `;
-
-          const actions = document.createElement('div');
-          actions.classList.add('actions');
-
-          const copyBtn = document.createElement('button');
-          copyBtn.textContent = 'Copy';
-          copyBtn.onclick = () => navigator.clipboard.writeText(item.password);
-
-          const editBtn = document.createElement('button');
-          editBtn.textContent = 'Edit';
-          editBtn.onclick = () => editPassword(item.id, item.name, item.password);
-
-          const deleteBtn = document.createElement('button');
-          deleteBtn.textContent = 'Delete';
-          deleteBtn.onclick = () => deletePassword(item.id);
-
-          actions.appendChild(copyBtn);
-          actions.appendChild(editBtn);
-          actions.appendChild(deleteBtn);
-
-          li.appendChild(actions);
-
-          li.addEventListener('dragstart', () => {
-            draggedElement = li;
-            li.classList.add('dragging');
-          });
-
-          li.addEventListener('dragend', () => {
-            li.classList.remove('dragging');
-            draggedElement = null;
-          });
-
-          list.appendChild(li);
-        });
-
-        list.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          const afterElement = getDragAfterElement(list, e.clientY);
-          if (draggedElement && afterElement) {
-            list.insertBefore(draggedElement, afterElement);
-          }
-        });
-      }
-    }
-
-    function getDragAfterElement(container, y) {
-      const draggableElements = [
-        ...container.querySelectorAll('li:not(.dragging)'),
-      ];
-
-      return draggableElements.reduce(
-        (closest, child) => {
-          const box = child.getBoundingClientRect();
-          const offset = y - box.top - box.height / 2;
-          if (offset < 0 && offset > closest.offset) {
-            return { offset, element: child };
-          } else {
-            return closest;
-          }
-        },
-        { offset: Number.NEGATIVE_INFINITY }
-      ).element;
-    }
-
-    async function deletePassword(id) {
-      const response = await fetch(`${baseUrl}/delete-password/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        fetchPasswords();
-      } else {
-        alert('Failed to delete password');
-      }
-    }
-
-    async function editPassword(id, name, password) {
-      const newName = prompt('Edit Service Name', name);
-      const newPassword = prompt('Edit Password', password);
-
-      if (newName && newPassword) {
-        const response = await fetch(`${baseUrl}/edit-password/${id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ name: newName, password: newPassword }),
-        });
-
-        if (response.ok) {
-          fetchPasswords();
-        } else {
-          alert('Failed to edit password');
-        }
-      }
-    }
-
-    async function addPassword() {
-      const name = document.getElementById('serviceName').value;
-      const password = document.getElementById('servicePassword').value;
-
-      const response = await fetch(`${baseUrl}/add-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name, password }),
-      });
-
-      if (response.ok) {
-        fetchPasswords();
-      } else {
-        alert('Failed to add password');
-      }
-    }
-
-    function logout() {
-      token = '';
-      showAuth();
-    }
-  </script>
+    </script>
 </body>
 </html>
