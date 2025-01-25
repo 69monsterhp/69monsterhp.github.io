@@ -12,8 +12,8 @@
       padding: 0;
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
+      align-items: flex-start;
+      min-height: 100vh;
     }
 
     #container {
@@ -24,6 +24,9 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
 
     h1 {
@@ -55,11 +58,22 @@
 
     #dashboard {
       display: none;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
-    ul {
-      list-style: none;
+    #passwordListContainer {
+      overflow-y: auto;
+      flex-grow: 1;
+      margin-bottom: 10px;
+    }
+
+    #passwordList {
+      list-style: decimal;
       padding: 0;
+      max-height: 300px;
     }
 
     li {
@@ -67,7 +81,6 @@
       margin: 5px 0;
       padding: 10px;
       border-radius: 4px;
-      border: 1px solid #e5e7eb;
       cursor: pointer;
     }
 
@@ -78,6 +91,17 @@
     .hidden {
       display: none;
     }
+
+    #buttonsContainer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    #logout {
+      align-self: flex-start;
+    }
+
   </style>
 </head>
 <body>
@@ -93,18 +117,24 @@
     <div id="dashboard">
       <h1>Welcome</h1>
       <button id="logout" onclick="logout()">Logout</button>
+      
       <h2>Add New Password</h2>
       <input type="text" id="serviceName" placeholder="Service Name">
       <input type="text" id="servicePassword" placeholder="Password" id="newPasswordInput">
       <button onclick="addPassword()">Add Password</button>
 
       <h2>Stored Passwords</h2>
-      <ul id="passwordList" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <!-- Password list will appear here -->
-      </ul>
-      <button id="copyButton" class="hidden" onclick="copyPassword()">Copy</button>
-      <button id="editButton" class="hidden" onclick="editPassword()">Edit</button>
-      <button id="deleteButton" class="hidden" onclick="deletePassword()">Delete</button>
+      <div id="passwordListContainer">
+        <ul id="passwordList">
+          <!-- Password list will appear here -->
+        </ul>
+      </div>
+
+      <div id="buttonsContainer" class="hidden">
+        <button id="copyButton" onclick="copyPassword()">Copy</button>
+        <button id="editButton" onclick="editPassword()">Edit</button>
+        <button id="deleteButton" onclick="deletePassword()">Delete</button>
+      </div>
     </div>
   </div>
 
@@ -203,14 +233,26 @@
       const data = await response.json();
       const list = document.getElementById('passwordList');
       list.innerHTML = '';
-      data.forEach(item => {
+      data.forEach((item, index) => {
         const li = document.createElement('li');
-        li.textContent = `${item.name}: ${item.password}`;
+        li.textContent = `${index + 1}. ${item.name}`;
         li.draggable = true;
         li.ondragstart = (e) => drag(e, item.id);
         li.id = `password-${item.id}`;
+        li.onclick = () => selectPassword(item.id);
         list.appendChild(li);
       });
+    }
+
+    function selectPassword(passwordId) {
+      const listItems = document.querySelectorAll('#passwordList li');
+      listItems.forEach(item => item.classList.remove('selected'));
+      
+      const selectedItem = document.getElementById(`password-${passwordId}`);
+      selectedItem.classList.add('selected');
+      
+      selectedPasswordId = passwordId;
+      document.getElementById('buttonsContainer').classList.remove('hidden');
     }
 
     function allowDrop(ev) {
@@ -284,6 +326,53 @@
         fetchPasswords();
       } else {
         console.error('Failed to add password:', await response.text());
+      }
+    }
+
+    async function copyPassword() {
+      const response = await fetch(`${baseUrl}/get-passwords`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      const password = data.find(item => item.id === selectedPasswordId);
+      const textArea = document.createElement('textarea');
+      textArea.value = password.password;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+
+    async function editPassword() {
+      const newPassword = prompt('Enter the new password:');
+      if (!newPassword) return;
+
+      const response = await fetch(`${baseUrl}/edit-password/${selectedPasswordId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: 'Edited Service', password: newPassword }),
+      });
+
+      if (response.ok) {
+        fetchPasswords();
+      } else {
+        console.error('Failed to edit password:', await response.text());
+      }
+    }
+
+    async function deletePassword() {
+      const response = await fetch(`${baseUrl}/delete-password/${selectedPasswordId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        fetchPasswords();
+      } else {
+        console.error('Failed to delete password:', await response.text());
       }
     }
 
