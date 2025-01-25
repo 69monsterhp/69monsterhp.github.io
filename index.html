@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Password Manager</title>
   <style>
+    /* Styles for drag-and-drop list */
     body {
       font-family: 'Arial', sans-serif;
       background-color: #f3f4f6;
@@ -12,8 +13,8 @@
       padding: 0;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
+      align-items: center;
+      height: 100vh;
     }
 
     #container {
@@ -24,9 +25,6 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       text-align: center;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
     }
 
     h1 {
@@ -58,22 +56,12 @@
 
     #dashboard {
       display: none;
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
     }
 
-    #passwordListContainer {
-      overflow-y: auto;
-      flex-grow: 1;
-      margin-bottom: 10px;
-    }
-
-    #passwordList {
-      list-style: decimal;
+    ul {
+      list-style: none;
       padding: 0;
-      max-height: 300px;
+      margin-top: 20px;
     }
 
     li {
@@ -81,27 +69,34 @@
       margin: 5px 0;
       padding: 10px;
       border-radius: 4px;
+      border: 1px solid #e5e7eb;
       cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     li.selected {
       background-color: #e5e7eb;
     }
 
-    .hidden {
-      display: none;
-    }
-
-    #buttonsContainer {
+    .button-container {
       display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
+      gap: 10px;
     }
 
-    #logout {
-      align-self: flex-start;
+    .btn {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 5px;
     }
 
+    .btn:hover {
+      background-color: #2563eb;
+    }
   </style>
 </head>
 <body>
@@ -117,30 +112,20 @@
     <div id="dashboard">
       <h1>Welcome</h1>
       <button id="logout" onclick="logout()">Logout</button>
-      
       <h2>Add New Password</h2>
       <input type="text" id="serviceName" placeholder="Service Name">
       <input type="text" id="servicePassword" placeholder="Password" id="newPasswordInput">
       <button onclick="addPassword()">Add Password</button>
 
       <h2>Stored Passwords</h2>
-      <div id="passwordListContainer">
-        <ul id="passwordList">
-          <!-- Password list will appear here -->
-        </ul>
-      </div>
-
-      <div id="buttonsContainer" class="hidden">
-        <button id="copyButton" onclick="copyPassword()">Copy</button>
-        <button id="editButton" onclick="editPassword()">Edit</button>
-        <button id="deleteButton" onclick="deletePassword()">Delete</button>
-      </div>
+      <ul id="passwordList" id="passwordList" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <!-- List items will be dynamically added here -->
+      </ul>
     </div>
   </div>
 
   <script>
     let token = '';
-    let selectedPasswordId = null;
     const baseUrl = 'http://localhost:5000';
 
     function showDashboard() {
@@ -232,81 +217,46 @@
 
       const data = await response.json();
       const list = document.getElementById('passwordList');
-      list.innerHTML = '';
+      list.innerHTML = ''; // Clear existing list
+
       data.forEach((item, index) => {
         const li = document.createElement('li');
-        li.textContent = `${index + 1}. ${item.name}`;
-        li.draggable = true;
-        li.ondragstart = (e) => drag(e, item.id);
-        li.id = `password-${item.id}`;
-        li.onclick = () => selectPassword(item.id);
+        li.setAttribute('draggable', 'true');
+        li.setAttribute('id', `password-${item.name}`);
+        li.setAttribute('ondragstart', `drag(event, ${index})`);
+        li.textContent = `${item.name}: ${item.password}`;
+        
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('button-container');
+
+        const copyBtn = document.createElement('button');
+        copyBtn.classList.add('btn');
+        copyBtn.textContent = 'Copy';
+        copyBtn.onclick = () => copyPassword(item.password);
+
+        const editBtn = document.createElement('button');
+        editBtn.classList.add('btn');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = () => editPassword(item.id);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.classList.add('btn');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.onclick = () => deletePassword(item.id);
+
+        buttonContainer.appendChild(copyBtn);
+        buttonContainer.appendChild(editBtn);
+        buttonContainer.appendChild(deleteBtn);
+
+        li.appendChild(buttonContainer);
         list.appendChild(li);
       });
     }
 
-    function selectPassword(passwordId) {
-      const listItems = document.querySelectorAll('#passwordList li');
-      listItems.forEach(item => item.classList.remove('selected'));
-      
-      const selectedItem = document.getElementById(`password-${passwordId}`);
-      selectedItem.classList.add('selected');
-      
-      selectedPasswordId = passwordId;
-      document.getElementById('buttonsContainer').classList.remove('hidden');
-    }
-
-    function allowDrop(ev) {
-      ev.preventDefault();
-    }
-
-    function drag(ev, passwordId) {
-      ev.dataTransfer.setData('passwordId', passwordId);
-    }
-
-    function drop(ev) {
-      ev.preventDefault();
-      const passwordId = ev.dataTransfer.getData('passwordId');
-      const list = document.getElementById('passwordList');
-      const draggedElement = document.getElementById(`password-${passwordId}`);
-      const afterElement = getDragAfterElement(list, ev.clientY);
-      if (afterElement == null) {
-        list.appendChild(draggedElement);
-      } else {
-        list.insertBefore(draggedElement, afterElement);
-      }
-
-      const orderedPasswordIds = Array.from(list.children).map(li => li.id.split('-')[1]);
-      reorderPasswords(orderedPasswordIds);
-    }
-
-    function getDragAfterElement(list, y) {
-      const draggableElements = [...list.querySelectorAll('li:not(.dragging)')];
-      return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        if (offset < 0 && offset > closest.offset) {
-          return { offset, element: child };
-        } else {
-          return closest;
-        }
-      }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
-
-    async function reorderPasswords(passwordIds) {
-      const response = await fetch(`${baseUrl}/reorder-passwords`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ password_ids: passwordIds }),
+    function copyPassword(password) {
+      navigator.clipboard.writeText(password).then(() => {
+        console.log('Password copied to clipboard');
       });
-
-      if (response.ok) {
-        console.log('Passwords reordered');
-      } else {
-        console.error('Failed to reorder passwords');
-      }
     }
 
     async function addPassword() {
@@ -329,42 +279,36 @@
       }
     }
 
-    async function copyPassword() {
-      const response = await fetch(`${baseUrl}/get-passwords`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      const password = data.find(item => item.id === selectedPasswordId);
-      const textArea = document.createElement('textarea');
-      textArea.value = password.password;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
+    function logout() {
+      token = '';
+      showAuth();
     }
 
-    async function editPassword() {
-      const newPassword = prompt('Enter the new password:');
-      if (!newPassword) return;
+    // Handle drag and drop
+    function allowDrop(ev) {
+      ev.preventDefault();
+    }
 
-      const response = await fetch(`${baseUrl}/edit-password/${selectedPasswordId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: 'Edited Service', password: newPassword }),
-      });
+    function drag(ev, index) {
+      ev.dataTransfer.setData("text", index);
+    }
 
-      if (response.ok) {
-        fetchPasswords();
-      } else {
-        console.error('Failed to edit password:', await response.text());
+    function drop(ev) {
+      ev.preventDefault();
+      let data = ev.dataTransfer.getData("text");
+      const list = document.getElementById('passwordList');
+      const draggedElement = list.children[data];
+      const targetElement = ev.target;
+
+      // Swap positions
+      if (draggedElement !== targetElement) {
+        list.insertBefore(draggedElement, targetElement.nextSibling);
       }
     }
 
-    async function deletePassword() {
-      const response = await fetch(`${baseUrl}/delete-password/${selectedPasswordId}`, {
+    // Delete password
+    async function deletePassword(id) {
+      const response = await fetch(`${baseUrl}/delete-password/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -376,10 +320,7 @@
       }
     }
 
-    function logout() {
-      token = '';
-      showAuth();
-    }
+    // Edit password functionality can be added here if needed
   </script>
 </body>
 </html>
