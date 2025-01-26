@@ -1,62 +1,63 @@
-// Global state to track if the user is registering or logging in
-let isRegistering = true;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
+        .container { width: 80%; margin: 0 auto; padding-top: 50px; }
+        header { text-align: center; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border: 1px solid #ddd; }
+        th { background-color: #4CAF50; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        input[type="text"], input[type="password"], input[type="submit"] { padding: 8px; margin: 5px 0; width: 100%; }
+        .form-container { background-color: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        .add-form { margin-bottom: 20px; }
+        .add-form input[type="submit"] { width: 100px; }
+        .delete-btn { color: red; cursor: pointer; }
+    </style>
+</head>
+<body>
 
-// Toggle between Register and Login
-function toggleForm() {
-    isRegistering = !isRegistering;
-    document.getElementById("actionBtn").textContent = isRegistering ? "Register" : "Login";
-    document.getElementById("toggleText").innerHTML = isRegistering 
-        ? "Already have an account? <span onclick='toggleForm()'>Login</span>"
-        : "Don't have an account? <span onclick='toggleForm()'>Register</span>";
-    document.getElementById("message").innerHTML = "";
-}
+<div class="container">
+    <header>
+        <h1>Password Manager</h1>
+    </header>
 
-// Handle form submission (Register or Login)
-async function handleSubmit(event) {
-    event.preventDefault();
+    <div class="form-container">
+        <h2>Add a new password</h2>
+        <form class="add-form" action="/add" method="POST">
+            <input type="text" name="site" placeholder="Website" required>
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="submit" value="Add Password">
+        </form>
+    </div>
 
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-    const messageDiv = document.getElementById("message");
+    <h2>Saved Passwords</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Website</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for password in passwords %}
+            <tr>
+                <td>{{ password[1] }}</td>
+                <td>{{ password[2] }}</td>
+                <td>{{ password[3] }}</td>
+                <td><a href="/delete/{{ password[0] }}" class="delete-btn">Delete</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-    // Get user data from localStorage
-    let users = JSON.parse(localStorage.getItem("users")) || {};
-
-    // Check if Registering
-    if (isRegistering) {
-        // If user already exists, show message
-        if (users[username]) {
-            messageDiv.textContent = "User already exists!";
-            messageDiv.style.color = "red";
-            return;
-        }
-
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        // Save user to localStorage
-        users[username] = { password: hashedPassword };
-        localStorage.setItem("users", JSON.stringify(users));
-
-        messageDiv.textContent = "User registered successfully!";
-        messageDiv.style.color = "green";
-    } else {
-        // If logging in, check if the user exists
-        if (!users[username]) {
-            messageDiv.textContent = "User not found!";
-            messageDiv.style.color = "red";
-            return;
-        }
-
-        // Check if the password matches the stored hashed password
-        const isMatch = await bcrypt.compare(password, users[username].password);
-
-        if (isMatch) {
-            messageDiv.textContent = "Login successful!";
-            messageDiv.style.color = "green";
-        } else {
-            messageDiv.textContent = "Invalid credentials!";
-            messageDiv.style.color = "red";
-        }
-    }
-}
+</body>
+</html>
