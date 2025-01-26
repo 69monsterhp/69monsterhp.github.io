@@ -4,32 +4,25 @@ import axios from 'axios';
 function App() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isRegistering, setIsRegistering] = useState(true); // True for Register, False for Login
   const [message, setMessage] = useState('');
 
-  const handleRegister = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post('/register', { username, password });
-      setMessage(response.data.message);
-    } catch (error) {
-      setMessage("Registration failed");
-    }
-  };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+    const endpoint = isRegistering ? '/register' : '/login';
     try {
-      const response = await axios.post('/login', { username, password });
+      const response = await axios.post(endpoint, { username, password });
       setMessage(response.data.message);
     } catch (error) {
-      setMessage("Login failed");
+      setMessage(error.response ? error.response.data.message : "Error occurred");
     }
   };
 
   return (
     <div className="App">
       <h1>Password Manager</h1>
-      <form onSubmit={handleRegister}>
+      <form onSubmit={handleSubmit}>
         <input 
           type="text" 
           value={username} 
@@ -42,11 +35,16 @@ function App() {
           onChange={(e) => setPassword(e.target.value)} 
           placeholder="Password" 
         />
-        <button type="submit">Register</button>
+        <button type="submit">{isRegistering ? 'Register' : 'Login'}</button>
       </form>
-      <form onSubmit={handleLogin}>
-        <button type="submit">Login</button>
-      </form>
+
+      <p>
+        {isRegistering ? "Already have an account?" : "Don't have an account?"}
+        <span onClick={() => setIsRegistering(!isRegistering)}>
+          {isRegistering ? "Login" : "Register"}
+        </span>
+      </p>
+
       <div>{message}</div>
     </div>
   );
