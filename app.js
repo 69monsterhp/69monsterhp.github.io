@@ -1,55 +1,62 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+// Global state to track if the user is registering or logging in
+let isRegistering = true;
 
-function App() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post('/register', { username, password });
-      setMessage(response.data.message);
-    } catch (error) {
-      setMessage("Registration failed");
-    }
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post('/login', { username, password });
-      setMessage(response.data.message);
-    } catch (error) {
-      setMessage("Login failed");
-    }
-  };
-
-  return (
-    <div className="App">
-      <h1>Password Manager</h1>
-      <form onSubmit={handleRegister}>
-        <input 
-          type="text" 
-          value={username} 
-          onChange={(e) => setUsername(e.target.value)} 
-          placeholder="Username" 
-        />
-        <input 
-          type="password" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
-          placeholder="Password" 
-        />
-        <button type="submit">Register</button>
-      </form>
-      <form onSubmit={handleLogin}>
-        <button type="submit">Login</button>
-      </form>
-      <div>{message}</div>
-    </div>
-  );
+// Toggle between Register and Login
+function toggleForm() {
+    isRegistering = !isRegistering;
+    document.getElementById("actionBtn").textContent = isRegistering ? "Register" : "Login";
+    document.getElementById("toggleText").innerHTML = isRegistering 
+        ? "Already have an account? <span onclick='toggleForm()'>Login</span>"
+        : "Don't have an account? <span onclick='toggleForm()'>Register</span>";
+    document.getElementById("message").innerHTML = "";
 }
 
-export default App;
+// Handle form submission (Register or Login)
+async function handleSubmit(event) {
+    event.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const messageDiv = document.getElementById("message");
+
+    // Get user data from localStorage
+    let users = JSON.parse(localStorage.getItem("users")) || {};
+
+    // Check if Registering
+    if (isRegistering) {
+        // If user already exists, show message
+        if (users[username]) {
+            messageDiv.textContent = "User already exists!";
+            messageDiv.style.color = "red";
+            return;
+        }
+
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Save user to localStorage
+        users[username] = { password: hashedPassword };
+        localStorage.setItem("users", JSON.stringify(users));
+
+        messageDiv.textContent = "User registered successfully!";
+        messageDiv.style.color = "green";
+    } else {
+        // If logging in, check if the user exists
+        if (!users[username]) {
+            messageDiv.textContent = "User not found!";
+            messageDiv.style.color = "red";
+            return;
+        }
+
+        // Check if the password matches the stored hashed password
+        const isMatch = await bcrypt.compare(password, users[username].password);
+
+        if (isMatch) {
+            messageDiv.textContent = "Login successful!";
+            messageDiv.style.color = "green";
+        } else {
+            messageDiv.textContent = "Invalid credentials!";
+            messageDiv.style.color = "red";
+        }
+    }
+}
