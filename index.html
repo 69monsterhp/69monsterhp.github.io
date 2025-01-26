@@ -5,88 +5,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Password Manager</title>
     <style>
-        /* Global Styles */
-        * {
+        body {
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f3f4f6;
-            color: #333;
-            padding: 0;
-        }
-        .container {
-            max-width: 900px;
-            margin: 30px auto;
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        h1 {
-            font-size: 2rem;
-            color: #4CAF50;
+            background-color: #f1f1f1;
         }
 
-        /* Form Styles */
-        .form-container {
-            margin-bottom: 40px;
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
         }
+
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            color: #333;
+        }
+
+        .form-container {
+            margin-bottom: 20px;
+        }
+
         .form-container input[type="text"],
         .form-container input[type="password"],
         .form-container input[type="submit"] {
             width: 100%;
             padding: 10px;
-            margin: 8px 0;
+            margin: 10px 0;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 1rem;
         }
+
         .form-container input[type="submit"] {
             background-color: #4CAF50;
             color: white;
             border: none;
             cursor: pointer;
         }
+
         .form-container input[type="submit"]:hover {
             background-color: #45a049;
         }
 
-        /* Table Styles */
         table {
             width: 100%;
+            margin-top: 20px;
             border-collapse: collapse;
         }
+
         th, td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
+
         th {
             background-color: #4CAF50;
             color: white;
         }
+
         tr:hover {
-            background-color: #f1f1f1;
-        }
-        .delete-btn {
-            color: red;
-            cursor: pointer;
-            text-decoration: none;
+            background-color: #f9f9f9;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
+        .delete-btn {
+            color: red;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .delete-btn:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
             .container {
-                padding: 15px;
+                padding: 10px;
             }
+
             h1 {
                 font-size: 1.5rem;
+            }
+
+            .form-container input[type="submit"] {
+                font-size: 1rem;
+            }
+
+            table {
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -94,12 +106,10 @@
 <body>
 
 <div class="container">
-    <header>
-        <h1>Password Manager</h1>
-    </header>
+    <h1>Password Manager</h1>
 
     <div class="form-container">
-        <h2>Add a New Password</h2>
+        <h2>Add New Password</h2>
         <form action="/add" method="POST">
             <input type="text" name="site" placeholder="Website" required>
             <input type="text" name="username" placeholder="Username" required>
@@ -130,14 +140,6 @@
         </tbody>
     </table>
 </div>
-
-<script>
-    // JavaScript to toggle the password form visibility (if you need dynamic actions in the future)
-    function toggleForm() {
-        const formContainer = document.querySelector('.form-container');
-        formContainer.style.display = formContainer.style.display === 'none' ? 'block' : 'none';
-    }
-</script>
 
 </body>
 </html>
