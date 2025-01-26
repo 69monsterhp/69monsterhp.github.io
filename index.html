@@ -4,7 +4,84 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Password Manager</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    input {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    .actions button {
+      background: red;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .actions button:hover {
+      background: darkred;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -28,6 +105,51 @@
       </tbody>
     </table>
   </div>
-  <script src="script.js"></script>
+
+  <script>
+    const form = document.getElementById('password-form');
+    const tableBody = document.querySelector('#password-table tbody');
+
+    // Fetch and display passwords
+    async function loadPasswords() {
+      const response = await fetch('http://127.0.0.1:5000/api/passwords');
+      const passwords = await response.json();
+      tableBody.innerHTML = passwords.map(password => `
+        <tr>
+          <td>${password.service}</td>
+          <td>${password.username}</td>
+          <td>${password.password}</td>
+          <td class="actions">
+            <button onclick="deletePassword(${password.id})">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Add a new password
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const service = document.getElementById('service').value;
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      await fetch('http://127.0.0.1:5000/api/passwords', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ service, username, password }),
+      });
+
+      form.reset();
+      loadPasswords();
+    });
+
+    // Delete a password
+    async function deletePassword(id) {
+      await fetch(`http://127.0.0.1:5000/api/passwords/${id}`, { method: 'DELETE' });
+      loadPasswords();
+    }
+
+    loadPasswords();
+  </script>
 </body>
 </html>
