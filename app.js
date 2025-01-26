@@ -1,41 +1,55 @@
-async function register(username, email, password) {
-    try {
-        const response = await fetch("http://localhost:5000/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, email, password })
-        });
+import React, { useState } from 'react';
+import axios from 'axios';
 
-        const data = await response.json();
-        if (response.ok) {
-            console.log("Account created successfully:", data);
-        } else {
-            console.error("Failed to create account:", data.error);
-        }
+function App() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('/register', { username, password });
+      setMessage(response.data.message);
     } catch (error) {
-        console.error("Network error:", error);
+      setMessage("Registration failed");
     }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('/login', { username, password });
+      setMessage(response.data.message);
+    } catch (error) {
+      setMessage("Login failed");
+    }
+  };
+
+  return (
+    <div className="App">
+      <h1>Password Manager</h1>
+      <form onSubmit={handleRegister}>
+        <input 
+          type="text" 
+          value={username} 
+          onChange={(e) => setUsername(e.target.value)} 
+          placeholder="Username" 
+        />
+        <input 
+          type="password" 
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)} 
+          placeholder="Password" 
+        />
+        <button type="submit">Register</button>
+      </form>
+      <form onSubmit={handleLogin}>
+        <button type="submit">Login</button>
+      </form>
+      <div>{message}</div>
+    </div>
+  );
 }
 
-async function login(username, password) {
-    try {
-        const response = await fetch("http://localhost:5000/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-            console.log("Login successful:", data);
-        } else {
-            console.error("Login failed:", data.error);
-        }
-    } catch (error) {
-        console.error("Network error:", error);
-    }
-}
-
-// Example usage
-// register("testuser", "test@example.com", "mypassword123");
-// login("testuser", "mypassword123");
+export default App;
