@@ -103,133 +103,133 @@
     const baseUrl = 'http://localhost:5000';
 
     function showDashboard() {
-      document.getElementById('auth').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      fetchPasswords(); // Fetch passwords immediately after login
+        document.getElementById('auth').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        fetchPasswords(); // Fetch passwords immediately after login
     }
 
     function showAuth() {
-      document.getElementById('auth').style.display = 'block';
-      document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('auth').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'none';
     }
 
     function handleKeyDown(event) {
-      if (event.key === 'Enter') {
-        login();
-      }
+        if (event.key === 'Enter') {
+            login();
+        }
     }
 
     async function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
 
-      try {
-        const response = await fetch(${baseUrl}/login, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
+        try {
+            const response = await fetch(`${baseUrl}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Login failed:', errorText);
-          alert(Error: ${response.status} - ${errorText});
-          return;
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Login failed:', errorText);
+                alert(`Error: ${response.status} - ${errorText}`);
+                return;
+            }
+
+            const data = await response.json();
+            console.log('Login response:', data);
+
+            if (data.token) {
+                token = data.token;
+                showDashboard();
+            } else {
+                alert(data.message || 'Login failed');
+            }
+        } catch (error) {
+            console.error('Error during login:', error);
+            alert('An error occurred. Please try again.');
         }
-
-        const data = await response.json();
-        console.log('Login response:', data);
-
-        if (data.token) {
-          token = data.token;
-          showDashboard();
-        } else {
-          alert(data.message || 'Login failed');
-        }
-      } catch (error) {
-        console.error('Error during login:', error);
-        alert('An error occurred. Please try again.');
-      }
     }
 
     async function createAccount() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
 
-      try {
-        const response = await fetch(${baseUrl}/register, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
+        try {
+            const response = await fetch(`${baseUrl}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Account creation failed:', errorText);
-          alert(Error: ${response.status} - ${errorText});
-          return;
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Account creation failed:', errorText);
+                alert(`Error: ${response.status} - ${errorText}`);
+                return;
+            }
+
+            const data = await response.json();
+            console.log('Account creation response:', data);
+            alert(data.message || 'Account created successfully');
+        } catch (error) {
+            console.error('Error during account creation:', error);
+            alert('An error occurred. Please try again.');
         }
-
-        const data = await response.json();
-        console.log('Account creation response:', data);
-        alert(data.message || 'Account created successfully');
-      } catch (error) {
-        console.error('Error during account creation:', error);
-        alert('An error occurred. Please try again.');
-      }
     }
 
     async function fetchPasswords() {
-      const response = await fetch(${baseUrl}/get-passwords, {
-        headers: { Authorization: Bearer ${token} },
-      });
+        const response = await fetch(`${baseUrl}/get-passwords`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
 
-      if (!response.ok) {
-        console.error('Failed to fetch passwords:', await response.text());
-        return;
-      }
+        if (!response.ok) {
+            console.error('Failed to fetch passwords:', await response.text());
+            return;
+        }
 
-      const data = await response.json();
-      const list = document.getElementById('passwordList');
-      list.innerHTML = '';
-      data.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = ${item.name}: ${item.password};
-        li.onclick = () => copyPassword(item.password);
-        list.appendChild(li);
-      });
+        const data = await response.json();
+        const list = document.getElementById('passwordList');
+        list.innerHTML = '';
+        data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = `${item.name}: ${item.password}`;
+            li.onclick = () => copyPassword(item.password);
+            list.appendChild(li);
+        });
     }
 
     function copyPassword(password) {
-      navigator.clipboard.writeText(password).then(() => {
-        console.log('Password copied to clipboard');
-      });
+        navigator.clipboard.writeText(password).then(() => {
+            console.log('Password copied to clipboard');
+        });
     }
 
     async function addPassword() {
-      const serviceName = document.getElementById('serviceName').value;
-      const servicePassword = document.getElementById('servicePassword').value;
+        const serviceName = document.getElementById('serviceName').value;
+        const servicePassword = document.getElementById('servicePassword').value;
 
-      const response = await fetch(${baseUrl}/add-password, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: Bearer ${token},
-        },
-        body: JSON.stringify({ name: serviceName, password: servicePassword }),
-      });
+        const response = await fetch(`${baseUrl}/add-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ name: serviceName, password: servicePassword }),
+        });
 
-      if (response.ok) {
-        fetchPasswords();
-      } else {
-        console.error('Failed to add password:', await response.text());
-      }
+        if (response.ok) {
+            fetchPasswords();
+        } else {
+            console.error('Failed to add password:', await response.text());
+        }
     }
 
     function logout() {
-      token = '';
-      showAuth();
+        token = '';
+        showAuth();
     }
-  </script>
+</script>
 </body>
 </html>
