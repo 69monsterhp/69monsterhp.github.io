@@ -16,7 +16,8 @@
         th, td { padding: 10px; border: 1px solid #ddd; }
         th { background-color: #f8f9fa; }
         .hidden { display: none; }
-        .action-btns button { margin-left: 5px; }
+        .actions { text-align: center; }
+        .actions button { margin: 0 5px; }
     </style>
 </head>
 <body>
@@ -78,6 +79,7 @@
         function showLoginPage() {
             document.getElementById("loginPage").classList.remove("hidden");
             document.getElementById("registerPage").classList.add("hidden");
+            document.getElementById("passwordManagerPage").classList.add("hidden");
         }
 
         // Show register page
@@ -104,10 +106,11 @@
                 row.insertCell(0).innerText = password.website;
                 row.insertCell(1).innerText = password.username;
 
-                // Action buttons for Edit, Delete, Copy
-                const actionCell = row.insertCell(2);
-                actionCell.classList.add('action-btns');
-                actionCell.innerHTML = `
+                const actionsCell = row.insertCell(2);
+                actionsCell.classList.add("actions");
+
+                // Add delete, edit, and copy buttons
+                actionsCell.innerHTML = `
                     <button onclick="editPassword(${index})">Edit</button>
                     <button onclick="deletePassword(${index})">Delete</button>
                     <button onclick="copyPassword(${index})">Copy</button>
@@ -176,32 +179,33 @@
 
         // Edit password
         function editPassword(index) {
-            const passwordToEdit = passwords[index];
-            document.getElementById("website").value = passwordToEdit.website;
-            document.getElementById("username").value = passwordToEdit.username;
-            document.getElementById("password").value = passwordToEdit.password;
+            const newWebsite = prompt("Enter new website:", passwords[index].website);
+            const newUsername = prompt("Enter new username:", passwords[index].username);
+            const newPassword = prompt("Enter new password:", passwords[index].password);
 
-            // Remove the password from list and re-save it
-            passwords.splice(index, 1);
-            localStorage.setItem("passwords", JSON.stringify(passwords));
-            displayPasswords();
+            if (newWebsite && newUsername && newPassword) {
+                passwords[index] = { website: newWebsite, username: newUsername, password: newPassword };
+                localStorage.setItem("passwords", JSON.stringify(passwords));
+                displayPasswords();
+            }
         }
 
         // Delete password
         function deletePassword(index) {
-            passwords.splice(index, 1);
-            localStorage.setItem("passwords", JSON.stringify(passwords));
-            displayPasswords();
+            const confirmDelete = confirm("Are you sure you want to delete this password?");
+            if (confirmDelete) {
+                passwords.splice(index, 1);
+                localStorage.setItem("passwords", JSON.stringify(passwords));
+                displayPasswords();
+            }
         }
 
         // Copy password to clipboard
         function copyPassword(index) {
             const passwordToCopy = passwords[index].password;
-            navigator.clipboard.writeText(passwordToCopy).then(() => {
-                alert("Password copied to clipboard!");
-            }).catch(err => {
-                console.error("Failed to copy password: ", err);
-            });
+            navigator.clipboard.writeText(passwordToCopy)
+                .then(() => alert("Password copied to clipboard!"))
+                .catch(err => alert("Error copying password: " + err));
         }
 
         // Initial page setup
