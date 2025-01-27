@@ -16,6 +16,7 @@
         th, td { padding: 10px; border: 1px solid #ddd; }
         th { background-color: #f8f9fa; }
         .hidden { display: none; }
+        .action-btns button { margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -58,6 +59,7 @@
                 <tr>
                     <th>Website</th>
                     <th>Username</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -97,10 +99,19 @@
             const tableBody = document.getElementById("passwordsTable").getElementsByTagName("tbody")[0];
             tableBody.innerHTML = ""; // Clear current table rows
 
-            passwords.forEach(password => {
+            passwords.forEach((password, index) => {
                 const row = tableBody.insertRow();
                 row.insertCell(0).innerText = password.website;
                 row.insertCell(1).innerText = password.username;
+
+                // Action buttons for Edit, Delete, Copy
+                const actionCell = row.insertCell(2);
+                actionCell.classList.add('action-btns');
+                actionCell.innerHTML = `
+                    <button onclick="editPassword(${index})">Edit</button>
+                    <button onclick="deletePassword(${index})">Delete</button>
+                    <button onclick="copyPassword(${index})">Copy</button>
+                `;
             });
         }
 
@@ -158,10 +169,40 @@
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            passwords.push({ website, username });
+            passwords.push({ website, username, password });
             localStorage.setItem("passwords", JSON.stringify(passwords));
             displayPasswords();
         });
+
+        // Edit password
+        function editPassword(index) {
+            const passwordToEdit = passwords[index];
+            document.getElementById("website").value = passwordToEdit.website;
+            document.getElementById("username").value = passwordToEdit.username;
+            document.getElementById("password").value = passwordToEdit.password;
+
+            // Remove the password from list and re-save it
+            passwords.splice(index, 1);
+            localStorage.setItem("passwords", JSON.stringify(passwords));
+            displayPasswords();
+        }
+
+        // Delete password
+        function deletePassword(index) {
+            passwords.splice(index, 1);
+            localStorage.setItem("passwords", JSON.stringify(passwords));
+            displayPasswords();
+        }
+
+        // Copy password to clipboard
+        function copyPassword(index) {
+            const passwordToCopy = passwords[index].password;
+            navigator.clipboard.writeText(passwordToCopy).then(() => {
+                alert("Password copied to clipboard!");
+            }).catch(err => {
+                console.error("Failed to copy password: ", err);
+            });
+        }
 
         // Initial page setup
         if (loggedInUser) {
