@@ -1,61 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Password Manager</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-        .container { width: 50%; margin: 0 auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); }
-        h1, h2 { text-align: center; }
-        form { display: flex; flex-direction: column; margin-bottom: 20px; }
-        input { padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; }
-        th { background-color: #f8f9fa; }
-        .hidden { display: none; }
-        .actions { text-align: center; }
-        .actions button { margin: 0 5px; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form input {
+            margin: 5px;
+            padding: 8px;
+        }
+
+        button {
+            padding: 8px 15px;
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        .actions a {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .logout {
+            background-color: #f44336;
+        }
+
+        .logout:hover {
+            background-color: #e53935;
+        }
     </style>
 </head>
+
 <body>
 
-    <!-- Login Page -->
-    <div id="loginPage" class="container">
-        <h1>Login</h1>
-        <form id="loginForm">
-            <input type="text" id="loginUsername" placeholder="Username" required>
-            <input type="password" id="loginPassword" placeholder="Password" required>
+    <h1>Password Manager</h1>
+
+    <div id="login-screen">
+        <h2>Login</h2>
+        <form id="login-form">
+            <input type="text" id="login-username" placeholder="Username" required>
+            <input type="password" id="login-password" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
-        <p>Don't have an account? <a href="javascript:void(0);" onclick="showRegisterPage()">Register here</a></p>
-    </div>
 
-    <!-- Register Page -->
-    <div id="registerPage" class="container hidden">
-        <h1>Register</h1>
-        <form id="registerForm">
-            <input type="text" id="registerUsername" placeholder="Username" required>
-            <input type="password" id="registerPassword" placeholder="Password" required>
+        <h2>Register</h2>
+        <form id="register-form">
+            <input type="text" id="register-username" placeholder="Username" required>
+            <input type="password" id="register-password" placeholder="Password" required>
             <button type="submit">Register</button>
         </form>
-        <p>Already have an account? <a href="javascript:void(0);" onclick="showLoginPage()">Login here</a></p>
     </div>
 
-    <!-- Password Manager Page -->
-    <div id="passwordManagerPage" class="container hidden">
-        <h1>Password Manager</h1>
-        <button onclick="logout()">Logout</button>
-        <form id="passwordForm">
-            <input type="text" id="website" placeholder="Website" required>
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit">Save</button>
-        </form>
-        <h2>Stored Passwords</h2>
-        <table id="passwordsTable">
+    <div id="password-manager" style="display:none;">
+        <h2>Welcome, <span id="user-name"></span>!</h2>
+        <button class="logout" onclick="logout()">Logout</button>
+
+        <h3>Your Stored Passwords</h3>
+        <table id="passwords-table">
             <thead>
                 <tr>
                     <th>Website</th>
@@ -63,158 +96,162 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Passwords will be dynamically inserted here -->
+            <tbody id="passwords-list">
             </tbody>
         </table>
+
+        <h3>Add New Password</h3>
+        <form id="add-password-form">
+            <input type="text" id="website" placeholder="Website" required>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Save Password</button>
+        </form>
     </div>
 
     <script>
-        // Simulate the "database" using localStorage
-        let users = JSON.parse(localStorage.getItem("users")) || [];
-        let loggedInUser = JSON.parse(localStorage.getItem("loggedInUser")) || null;
-        let passwords = JSON.parse(localStorage.getItem("passwords")) || [];
+        // Initialize app
+        document.addEventListener("DOMContentLoaded", function () {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const passwordManager = document.getElementById('password-manager');
+            const loginScreen = document.getElementById('login-screen');
+            const userNameSpan = document.getElementById('user-name');
+            const passwordsTable = document.getElementById('passwords-table');
+            const passwordsList = document.getElementById('passwords-list');
 
-        // Show login page
-        function showLoginPage() {
-            document.getElementById("loginPage").classList.remove("hidden");
-            document.getElementById("registerPage").classList.add("hidden");
-            document.getElementById("passwordManagerPage").classList.add("hidden");
-        }
+            const loadPasswords = () => {
+                const user = JSON.parse(localStorage.getItem('loggedInUser'));
+                if (user) {
+                    const passwords = JSON.parse(localStorage.getItem(user.username + '-passwords')) || [];
+                    passwordsList.innerHTML = '';
+                    passwords.forEach((password, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${password.website}</td>
+                            <td>${password.username}</td>
+                            <td class="actions">
+                                <a href="#" onclick="editPassword(${index})">Edit</a>
+                                <a href="#" onclick="deletePassword(${index})">Delete</a>
+                            </td>
+                        `;
+                        passwordsList.appendChild(row);
+                    });
+                }
+            };
 
-        // Show register page
-        function showRegisterPage() {
-            document.getElementById("registerPage").classList.remove("hidden");
-            document.getElementById("loginPage").classList.add("hidden");
-        }
+            // Show password manager screen
+            const showPasswordManager = () => {
+                loginScreen.style.display = 'none';
+                passwordManager.style.display = 'block';
+                loadPasswords();
+            };
 
-        // Show password manager page
-        function showPasswordManagerPage() {
-            document.getElementById("passwordManagerPage").classList.remove("hidden");
-            document.getElementById("loginPage").classList.add("hidden");
-            document.getElementById("registerPage").classList.add("hidden");
-            displayPasswords();
-        }
+            // Show login screen
+            const showLoginScreen = () => {
+                loginScreen.style.display = 'block';
+                passwordManager.style.display = 'none';
+            };
 
-        // Display stored passwords in the table
-        function displayPasswords() {
-            const tableBody = document.getElementById("passwordsTable").getElementsByTagName("tbody")[0];
-            tableBody.innerHTML = ""; // Clear current table rows
+            // Handle login form submission
+            loginForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                const users = JSON.parse(localStorage.getItem('users')) || [];
 
-            passwords.forEach((password, index) => {
-                const row = tableBody.insertRow();
-                row.insertCell(0).innerText = password.website;
-                row.insertCell(1).innerText = password.username;
-
-                const actionsCell = row.insertCell(2);
-                actionsCell.classList.add("actions");
-
-                // Add delete, edit, and copy buttons
-                actionsCell.innerHTML = `
-                    <button onclick="editPassword(${index})">Edit</button>
-                    <button onclick="deletePassword(${index})">Delete</button>
-                    <button onclick="copyPassword(${index})">Copy</button>
-                `;
+                const user = users.find(u => u.username === username && u.password === password);
+                if (user) {
+                    localStorage.setItem('loggedInUser', JSON.stringify(user));
+                    userNameSpan.textContent = username;
+                    showPasswordManager();
+                } else {
+                    alert('Invalid login credentials.');
+                }
             });
-        }
 
-        // Register new user
-        document.getElementById("registerForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            const username = document.getElementById("registerUsername").value;
-            const password = document.getElementById("registerPassword").value;
+            // Handle registration form submission
+            registerForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const username = document.getElementById('register-username').value;
+                const password = document.getElementById('register-password').value;
+                const users = JSON.parse(localStorage.getItem('users')) || [];
 
-            // Check if username already exists
-            if (users.some(user => user.username === username)) {
-                alert("Username already exists!");
-                return;
-            }
+                if (users.find(u => u.username === username)) {
+                    alert('Username already exists.');
+                    return;
+                }
 
-            // Hash password (for demonstration, using plain text)
-            users.push({ username, password });
-            localStorage.setItem("users", JSON.stringify(users));
-            alert("Registration successful! Please login.");
-            showLoginPage();
-        });
+                const newUser = { username, password };
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+                alert('Registration successful. You can now log in.');
+            });
 
-        // Login user
-        document.getElementById("loginForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            const username = document.getElementById("loginUsername").value;
-            const password = document.getElementById("loginPassword").value;
+            // Logout function
+            const logout = () => {
+                localStorage.removeItem('loggedInUser');
+                showLoginScreen();
+            };
 
-            const user = users.find(user => user.username === username && user.password === password);
-            if (user) {
-                loggedInUser = user;
-                localStorage.setItem("loggedInUser", JSON.stringify(loggedInUser));
-                showPasswordManagerPage();
-            } else {
-                alert("Invalid credentials. Please try again.");
-            }
-        });
+            // Add password form submission
+            document.getElementById('add-password-form').addEventListener('submit', function (event) {
+                event.preventDefault();
 
-        // Logout user
-        function logout() {
-            loggedInUser = null;
-            localStorage.removeItem("loggedInUser");
-            showLoginPage();
-        }
+                const user = JSON.parse(localStorage.getItem('loggedInUser'));
+                if (user) {
+                    const website = document.getElementById('website').value;
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
 
-        // Save password
-        document.getElementById("passwordForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            if (!loggedInUser) {
-                alert("You must be logged in to add a password.");
-                return;
-            }
+                    const passwords = JSON.parse(localStorage.getItem(user.username + '-passwords')) || [];
+                    passwords.push({ website, username, password });
+                    localStorage.setItem(user.username + '-passwords', JSON.stringify(passwords));
 
-            const website = document.getElementById("website").value;
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
+                    document.getElementById('website').value = '';
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
 
-            passwords.push({ website, username, password });
-            localStorage.setItem("passwords", JSON.stringify(passwords));
-            displayPasswords();
-        });
+                    loadPasswords();
+                }
+            });
 
-        // Edit password
-        function editPassword(index) {
-            const newWebsite = prompt("Enter new website:", passwords[index].website);
-            const newUsername = prompt("Enter new username:", passwords[index].username);
-            const newPassword = prompt("Enter new password:", passwords[index].password);
+            // Edit password
+            window.editPassword = (index) => {
+                const user = JSON.parse(localStorage.getItem('loggedInUser'));
+                const passwords = JSON.parse(localStorage.getItem(user.username + '-passwords')) || [];
+                const password = passwords[index];
 
-            if (newWebsite && newUsername && newPassword) {
-                passwords[index] = { website: newWebsite, username: newUsername, password: newPassword };
-                localStorage.setItem("passwords", JSON.stringify(passwords));
-                displayPasswords();
-            }
-        }
+                const newUsername = prompt('Edit username:', password.username);
+                const newPassword = prompt('Edit password:', password.password);
 
-        // Delete password
-        function deletePassword(index) {
-            const confirmDelete = confirm("Are you sure you want to delete this password?");
-            if (confirmDelete) {
+                if (newUsername && newPassword) {
+                    passwords[index] = { website: password.website, username: newUsername, password: newPassword };
+                    localStorage.setItem(user.username + '-passwords', JSON.stringify(passwords));
+                    loadPasswords();
+                }
+            };
+
+            // Delete password
+            window.deletePassword = (index) => {
+                const user = JSON.parse(localStorage.getItem('loggedInUser'));
+                const passwords = JSON.parse(localStorage.getItem(user.username + '-passwords')) || [];
                 passwords.splice(index, 1);
-                localStorage.setItem("passwords", JSON.stringify(passwords));
-                displayPasswords();
+                localStorage.setItem(user.username + '-passwords', JSON.stringify(passwords));
+                loadPasswords();
+            };
+
+            // If logged in, show the password manager
+            const loggedInUser = localStorage.getItem('loggedInUser');
+            if (loggedInUser) {
+                userNameSpan.textContent = JSON.parse(loggedInUser).username;
+                showPasswordManager();
+            } else {
+                showLoginScreen();
             }
-        }
-
-        // Copy password to clipboard
-        function copyPassword(index) {
-            const passwordToCopy = passwords[index].password;
-            navigator.clipboard.writeText(passwordToCopy)
-                .then(() => alert("Password copied to clipboard!"))
-                .catch(err => alert("Error copying password: " + err));
-        }
-
-        // Initial page setup
-        if (loggedInUser) {
-            showPasswordManagerPage();
-        } else {
-            showLoginPage();
-        }
+        });
     </script>
 
 </body>
+
 </html>
