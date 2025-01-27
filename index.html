@@ -3,20 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Password Manager</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Login</h1>
-        <form action="/login" method="POST">
+        <h1>Password Manager</h1>
+        <a href="/logout">Logout</a>
+        <form action="/password_manager" method="POST">
+            <label for="website">Website:</label>
+            <input type="text" id="website" name="website" required><br><br>
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required><br><br>
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required><br><br>
-            <button type="submit">Login</button>
+            <button type="submit">Save</button>
         </form>
-        <p>Don't have an account? <a href="/register">Register here</a></p>
+        <h2>Stored Passwords</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Website</th>
+                    <th>Username</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for password in passwords %}
+                <tr>
+                    <td>{{ password[0] }}</td>
+                    <td>{{ password[1] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </body>
 </html>
