@@ -4,101 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Password Manager</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 30px auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            font-size: 2rem;
-            text-align: center;
-            color: #333;
-        }
-        form input {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-        form input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        form input[type="submit"]:hover {
-            background-color: #45a049;
-        }
-        table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-        }
-        table th, table td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
-        table th {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .delete-btn {
-            color: red;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .delete-btn:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="container">
+        <h1>Password Manager</h1>
+        <form id="passwordForm">
+            <label for="website">Website:</label>
+            <input type="text" id="website" name="website" required><br><br>
 
-<div class="container">
-    <h1>Password Manager</h1>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required><br><br>
 
-    <h3>Add a New Password</h3>
-    <form action="/add" method="POST">
-        <input type="text" name="site" placeholder="Website" required>
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="submit" value="Add Password">
-    </form>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required><br><br>
 
-    <h3>Saved Passwords</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Website</th>
-                <th>Username</th>
-                <th>Password</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for password in passwords %}
-            <tr>
-                <td>{{ password[1] }}</td>
-                <td>{{ password[2] }}</td>
-                <td>{{ password[3] }}</td>
-                <td><a href="/delete/{{ password[0] }}" class="delete-btn">Delete</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
+            <button type="submit">Save</button>
+        </form>
+        
+        <h2>Stored Passwords</h2>
+        <table id="passwordsTable">
+            <thead>
+                <tr>
+                    <th>Website</th>
+                    <th>Username</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Passwords will appear here -->
+            </tbody>
+        </table>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
