@@ -25,11 +25,12 @@
       color: #444;
     }
     form input, form button {
-      width: 100%;
+      width: calc(100% - 20px);
       padding: 10px;
       margin: 10px 0;
       border: 1px solid #ccc;
       border-radius: 5px;
+      display: block;
     }
     form button {
       background-color: #007BFF;
@@ -40,22 +41,116 @@
     form button:hover {
       background-color: #0056b3;
     }
+    .toggle-container {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .toggle-container button {
+      background-color: transparent;
+      border: none;
+      color: #007BFF;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .toggle-container button:hover {
+      color: #0056b3;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="main-container">
     <h1>Password Manager</h1>
-    <form id="password-form">
-      <input type="text" id="site" placeholder="Website" required>
-      <input type="text" id="username" placeholder="Username" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button type="submit">Save</button>
-    </form>
-    <div id="response"></div>
+
+    <div id="login-section">
+      <form id="login-form">
+        <input type="text" id="login-username" placeholder="Username" required>
+        <input type="password" id="login-password" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+      <div class="toggle-container">
+        <button id="show-register">Don't have an account? Register</button>
+      </div>
+    </div>
+
+    <div id="register-section" style="display: none;">
+      <form id="register-form">
+        <input type="text" id="register-username" placeholder="Username" required>
+        <input type="password" id="register-password" placeholder="Password" required>
+        <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+        <button type="submit">Register</button>
+      </form>
+      <div class="toggle-container">
+        <button id="show-login">Already have an account? Login</button>
+      </div>
+    </div>
+
+    <div id="password-section" style="display: none;">
+      <form id="password-form">
+        <input type="text" id="site" placeholder="Website" required>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Save</button>
+      </form>
+      <div id="response"></div>
+    </div>
   </div>
+
   <script>
-    const form = document.getElementById('password-form');
-    form.addEventListener('submit', async (e) => {
+    const loginSection = document.getElementById('login-section');
+    const registerSection = document.getElementById('register-section');
+    const passwordSection = document.getElementById('password-section');
+
+    // Toggle between login and register sections
+    document.getElementById('show-register').addEventListener('click', () => {
+      loginSection.style.display = 'none';
+      registerSection.style.display = 'block';
+    });
+
+    document.getElementById('show-login').addEventListener('click', () => {
+      registerSection.style.display = 'none';
+      loginSection.style.display = 'block';
+    });
+
+    // Simulated login and register flow
+    const users = {}; // Replace with backend integration
+    document.getElementById('register-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('register-username').value;
+      const password = document.getElementById('register-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+
+      if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+
+      if (users[username]) {
+        alert('Username already exists');
+        return;
+      }
+
+      users[username] = password;
+      alert('Registration successful!');
+      registerSection.style.display = 'none';
+      loginSection.style.display = 'block';
+    });
+
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+
+      if (users[username] === password) {
+        alert('Login successful!');
+        loginSection.style.display = 'none';
+        passwordSection.style.display = 'block';
+      } else {
+        alert('Invalid username or password');
+      }
+    });
+
+    // Submit password data to the backend
+    document.getElementById('password-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const site = document.getElementById('site').value;
       const username = document.getElementById('username').value;
